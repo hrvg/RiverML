@@ -5,10 +5,10 @@
 \title{Load a SpatialLinesDataFrame containing values for valley confinement, GIS slope and RUSLE.
 The SpatialDataFrame source data is the NHDv2Plus dataset which is segmented into 200-m stream intervals.}
 \usage{
-get_conf_gis(hydro_class, stream_order = FALSE)
+get_conf_gis(region, stream_order = FALSE)
 }
 \arguments{
-\item{stream_order}{logical, if}
+\item{stream_order}{logical, if \code{TRUE} changing the file loaded for a given region}
 }
 \value{
 a SpatialLinesDataFrame
