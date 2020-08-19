@@ -23,8 +23,7 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 # Libraries
 
 ```{r setup}
-# library(RiverML)
-devtools::load_all()
+library(RiverML)
 library(raster)
 ```
 
@@ -101,5 +100,52 @@ This indicates that we should submit `r optim_df$n_array` HPC jobs each computin
 Take this estimated execution time with a grain of salt as the `io_time` and `computing_time` values are usually derived using a local computer with likely more RAM than one HPC node, and with faster I/O speed than the I/O speed between the HPC nodes and wherever is your input data stored.
 
 ## Getting the terrain analysis data
+
+Armed with the optimized number of arrays and tasks per arrays, the HPC job can be submitted.
+This job will compute terrain analysis metrics (TAM, e.g. slope, curvature), and more specifically metrics of such TAM (e.g., mean, max).
+To derive these, a digital elevation model (DEM) is tiled around the locations specified by `target_points`.
+In our case, the input DEM corresponds to a 10-m DEM of California and its size prevents use to make the rest of the vignette executable.
+
+In the following, the HPC code is detailled and commented.
+
+### Submitting
+
+The TAM-DM HPC job is submitted with the following chunk which you will need to tailor to your own needs.
+The arguments `$1` and `$2` specify the output directory and the type of run.
+One example for `$1` is `/home/hguillon/out/run124`.
+One example for `$2` is `SFE_all`.
+
+```
+#!/bin/bash -l
+
+#SBATCH --partition=med
+#SBATCH --time=00-03:00:00
+#SBATCH --mem-per-cpu=5200
+#SBATCH --mail-type=END
+#SBATCH --mail-user=hguillon@ucdavis.edu
+#SBATCH --job-name=main_process_tam-dm
+#SBATCH --output=/home/hguillon/out/main_process_tam-dm_%A_%a.out
+#SBATCH --error=/home/hguillon/out/main_process_tam-dm_%A_%a_err.out
+
+srun Rscript ~/farm_scripts/main_process_tam-dm.R $1 $2
+```
+
+### Initialization
+
+We first check for arguments from the submitting `slurm` commands and retrieve the `region`.
+
+```
+# checking for args
+args = commandArgs(trailingOnly=TRUE)
+
+# test if there is at least one argument: if not, return an error
+if (length(args)!=2) {
+  stop("Output dir or input file missing.\n", call.=FALSE)
+}
+outdir <- args[1]
+run_type <- args[2]
+region <- unlist(strsplit(run_type, "_"))[1]
+```
+
 
 ## Getting the StreamCat data

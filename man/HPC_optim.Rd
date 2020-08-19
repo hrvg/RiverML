@@ -30,9 +30,9 @@ HPC_optim(
 \item{core_per_task}{number of CPU per task, default to 1.}
 }
 \value{
-a \code{data.frame} with columns \code{array_per_task}, \code{exec_time_min} and \code{n_array}
+a \code{data.frame} with columns \code{task_per_array}, \code{exec_time_min} and \code{n_array}
 }
 \description{
 This function uses the limits of maximum concurrent jobs, the input/output time and computng time.
-The time are derived using \code{profVis} package.
+The time are derived using \code{profvis} package.
 }

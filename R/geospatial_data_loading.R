@@ -44,3 +44,25 @@ get_target_points_df <- function(target_streamlines){
 	colnames(target_points_proj_df) <- c("Name", "long", "lat")
 	return(target_points_proj_df)
 }
+
+#' Get a SpatialPolygons around a point
+#' @param i the indice of the requested points
+#' @param pts SpatialPoints
+#' @param dl a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile
+#' @param .crs a `sp::CRS`, usually the one from the DEM to be tiled
+#' @export
+getpol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84")){
+	x_min <- pts@coords[i,1] - dl
+	x_max <- pts@coords[i,1] + dl
+	y_min <- pts@coords[i,2] - dl
+	y_max <- pts@coords[i,2] + dl
+	coords = matrix(c(x_min, y_min,
+	               x_min, y_max,
+	               x_max, y_max,
+	               x_max, y_min,
+	               x_min, y_min), 
+	             ncol = 2, byrow = TRUE)
+	p <-  sp::Polygon(coords)
+	sp1 <-  sp::SpatialPolygons(list(Polygons(list(p), ID = "a")), proj4string=.crs)
+	return(sp1)
+}

@@ -3,5 +3,6 @@
 export(HPC_optim)
 export(get_target_points_df)
 export(get_target_streamlines)
+export(getpol)
 import(raster)
 importFrom(methods,as)
