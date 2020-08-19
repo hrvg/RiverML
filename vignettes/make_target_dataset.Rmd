@@ -23,7 +23,8 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 # Libraries
 
 ```{r setup}
-library(RiverML)
+# library(RiverML)
+devtools::load_all()
 library(raster)
 ```
 
@@ -45,17 +46,43 @@ The nine regions are:
 | South East California |    SECA     |
 | San Joaquin Tulare    |     SJT     |
 
+## Loading `target_streamlines`
+
 We first define a region of study with the variable `region` and check that `get_target_streamlines()` and the lazy loaded dataset `target_streamlines_SFE` are identical.
 
-```{r}
+```{r get_target_streamlines}
 region <- "SFE"
 target_streamlines <- get_target_streamlines(region)
 data(target_streamlines_SFE)
 identical(target_streamlines, target_streamlines_SFE)
+target_streamlines
 ```
 
-# Checking HPC limits
+## Getting `target_points`
+
+From the `target_streamlines`, we now extract the `target_points` using `get_target_points_df()` which returns a `data.frame` containing the location of the midpoints of all the 200-m stream intervals.
+
+```{r get_target_points}
+target_points <- get_target_points_df(target_streamlines)
+head(target_points)
+```
+
+You will want to save this `target_points` `data.frame` as a separate `.csv` with format `region_all_input.csv`. 
+Such a file is required for the next step, high performance computing.
 
 ```
-check_hpc_limit(nrow(target_streamlines))
+fname <- paste0(region,"_all_input.csv")
+write.csv(target_points, file.path("path/to/output/", fname))
 ```
+
+# High Performance Computing
+
+At this stage, the goal is to use High Performance Computing (HPC) to highly parallelize the extraction of the data at the location defined by `target_points`.
+
+## Optimization
+
+
+
+## Getting the terrain analysis data
+
+## Getting the StreamCat data

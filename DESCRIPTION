@@ -17,7 +17,8 @@ Depends: R (>= 3.5.0)
 Imports:
 	sf,
 	raster,
-	methods
+	methods,
+  maptools
 Suggests: 
     testthat,
     knitr,

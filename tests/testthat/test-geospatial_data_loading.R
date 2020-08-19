@@ -9,3 +9,12 @@ test_that("get_target_streamlines works", {
 	expect_error(get_target_streamlines("UNDEFINED"))
 	expect_error(get_target_streamlines("SFE", extdir = getwd()))
 })
+
+test_that("get_target_points_df works", {
+	data(target_streamlines_SFE)
+	points <- get_target_points_df(target_streamlines_SFE)
+	expect_is(points, "data.frame")
+	expect_error(get_target_points_df(as.data.frame(target_streamlines_SFE)))
+	expect_true(nrow(points) == length(target_streamlines_SFE))
+	expect_equal(colnames(points), c("Name", "long", "lat"))
+})

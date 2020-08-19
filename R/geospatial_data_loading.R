@@ -29,3 +29,18 @@ get_target_streamlines <- function(region, extdir = NULL){
 	target_streamlines$ID <- seq(nrow(target_streamlines))
 	return(target_streamlines)
 }
+
+#' Extracts mid-points from streamlines
+#' @param target_streamlines a SpatialLinesDataFrame
+#' @return a data.frame with columns `Name`, `long` and `lat`
+#' @export
+get_target_points_df <- function(target_streamlines){
+	if(class(target_streamlines) != "SpatialLinesDataFrame") stop("`target_streamlines` is not a SpatialLinesDataFrame")
+	target_points <- maptools::SpatialLinesMidPoints(target_streamlines)
+	crdref <- sp::CRS("+proj=longlat +datum=WGS84")
+	target_points_proj <- sp::spTransform(target_points, crdref)
+	target_points_proj_df <- as.data.frame(target_points_proj)
+	target_points_proj_df <- target_points_proj_df[, names(target_points_proj_df) %in% c("ID", "coords.x1", "coords.x2")]
+	colnames(target_points_proj_df) <- c("Name", "long", "lat")
+	return(target_points_proj_df)
+}
