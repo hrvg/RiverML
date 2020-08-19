@@ -79,9 +79,26 @@ write.csv(target_points, file.path("path/to/output/", fname))
 
 At this stage, the goal is to use High Performance Computing (HPC) to highly parallelize the extraction of the data at the location defined by `target_points`.
 
-## Optimization
+## HPC Optimization
 
+While it is possible to request one HPC node per location in `target_points`, this is highly unefficient.
+This is because, as one HPC admin told me once, if you do so, most of your time might be spent in reading required data, rather than in actual compute.
+To estimate the optimum ratio of nodes to compute iterations, we use `HPC_optim()` which requires that you profile one iteration of the code using for example `profvis` package.
 
+```{r, fig.width = 6}
+optim_df <- HPC_optim(
+	nrow(target_points), 
+	hpc_lim = 1e4, 
+	io_time = 20e3, 
+	computing_time = 1830, 
+	AssocGrpCpuLimit = 258, 
+	core_per_task = 1
+)
+optim_df
+```
+
+This indicates that we should submit `r optim_df$n_array` HPC jobs each computing `r optim_df$task_per_array` iterations with an estimated time of `r signif(optim_df$exec_time_min, 3)` minutes per array.
+Take this estimated execution time with a grain of salt as the `io_time` and `computing_time` values are usually derived using a local computer with likely more RAM than one HPC node, and with faster I/O speed than the I/O speed between the HPC nodes and wherever is your input data stored.
 
 ## Getting the terrain analysis data
 
