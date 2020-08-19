@@ -1,0 +1,61 @@
+---
+title: "Make target dataset"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Make target dataset}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Purpose
+
+This vignette documents the workflow to create the target dataset_
+The [training dataset](make_training_dataset.html) is extracted from the target data set at selected labelled locations.
+
+
+# Libraries
+
+```{r setup}
+library(RiverML)
+library(raster)
+```
+
+# Loading data
+
+The dataset of target streamlines is loaded with `get_target_streamlines()`.
+The target streamlines for nine regions are included in the package and accessed with `target_streamlines_SFE`, for `SFE` region corresponding to the catchment of the South Fork Eel River, California, USA.
+The nine regions are: 
+
+| Region name           | Region code |
+|:----------------------|:-----------:|
+| South Fork Eel        |     SFE     |
+| Klamath               |      K      |
+| North Coast           |     NC      |
+| North Central Coast   |     NCC     |
+| South Central Coast   |     SCC     |
+| South Coast           |     SC      |
+| Sacramento            |     SAC     |
+| South East California |    SECA     |
+| San Joaquin Tulare    |     SJT     |
+
+We first define a region of study with the variable `region` and check that `get_target_streamlines()` and the lazy loaded dataset `target_streamlines_SFE` are identical.
+
+```{r}
+region <- "SFE"
+target_streamlines <- get_target_streamlines(region)
+data(target_streamlines_SFE)
+identical(target_streamlines, target_streamlines_SFE)
+```
+
+# Checking HPC limits
+
+```
+check_hpc_limit(nrow(target_streamlines))
+```

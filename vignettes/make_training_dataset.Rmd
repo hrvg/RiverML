@@ -1,0 +1,24 @@
+---
+title: "Make training dataset"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Make training dataset}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Purpose
+
+This vignette documents the workflow to create the training dataset which is extracted from the [target dataset](make_target_dataset.html) at selected labelled locations.
+
+
+```{r setup}
+library(RiverML)
+```
