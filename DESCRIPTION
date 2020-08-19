@@ -19,7 +19,8 @@ Imports:
   sp,
 	raster,
 	methods,
-  maptools
+  maptools,
+  rgdal
 Suggests: 
     testthat,
     knitr,
