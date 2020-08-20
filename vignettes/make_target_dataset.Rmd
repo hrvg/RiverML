@@ -23,8 +23,9 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 # Libraries
 
 ```{r setup}
-library(RiverML)
-library(raster)
+# library(RiverML)
+devtools::load_all()
+library(magrittr)
 ```
 
 # Loading data
@@ -89,7 +90,7 @@ optim_df <- HPC_optim(
 	nrow(target_points), 
 	hpc_lim = 1e4, 
 	io_time = 20e3, 
-	computing_time = 1830, 
+	computing_time = 4e3, 
 	AssocGrpCpuLimit = 258, 
 	core_per_task = 1
 )
@@ -99,7 +100,7 @@ optim_df
 This indicates that we should submit `r optim_df$n_array` HPC jobs each computing `r optim_df$task_per_array` iterations with an estimated time of `r signif(optim_df$exec_time_min, 3)` minutes per array.
 Take this estimated execution time with a grain of salt as the `io_time` and `computing_time` values are usually derived using a local computer with likely more RAM than one HPC node, and with faster I/O speed than the I/O speed between the HPC nodes and wherever is your input data stored.
 
-## Getting the terrain analysis data
+## Getting the terrain analysis and statistical roughness data
 
 Armed with the optimized number of arrays and tasks per arrays, the HPC job can be submitted.
 This job will compute terrain analysis metrics (TAM, e.g. slope, curvature), and more specifically metrics of such TAM (e.g., mean, max).
@@ -132,20 +133,86 @@ srun Rscript ~/farm_scripts/main_process_tam-dm.R $1 $2
 
 ### Initialization
 
-We first check for arguments from the submitting `slurm` commands and retrieve the `region`.
+We first check for arguments from the submitting `slurm` commands, retrieve the `region` and `slurm_arrayid` variables and define the output files, `fname_tam` and `fname_H`.
 
 ```
-# checking for args
-args = commandArgs(trailingOnly=TRUE)
+args = commandArgs(trailingOnly=TRUE) # checking for args
 
-# test if there is at least one argument: if not, return an error
-if (length(args)!=2) {
+if (length(args)!=2) { # test if there is at least one argument: if not, return an error
   stop("Output dir or input file missing.\n", call.=FALSE)
 }
+
 outdir <- args[1]
 run_type <- args[2]
 region <- unlist(strsplit(run_type, "_"))[1]
+
+slurm_arrayid <- Sys.getenv('SLURM_ARRAY_TASK_ID') # grab the array id value from the environment variable passed from sbatch
+slurm_arrayid <- as.numeric(slurm_arrayid) # coerce the value to an integer
+
+fname_tam <- paste0(outdir, slurm_arrayid,'_tam.csv')
+fname_H <- paste0(outdir, slurm_arrayid,'_H.csv')
 ```
+
+### Data Loading
+
+Assuming `run_type <- "SFE_all"`: `r run_type <- "SFE_all"`
+
+```{r}
+input_dir <- system.file("extdata/input_data", package = "RiverML")
+fname <- paste0(run_type,"_input.csv")
+input_data <- get_input_data(file.path(input_dir, fname))
+head(input_data)
+```
+
+Assuming `slurm_arrayid <- 89`: `r slurm_arrayid <- 89`
+
+```{r}
+df_optim <- HPC_optim(nrow(input_data), io_time = 20e3, computing_time = 4e3, pl = FALSE)
+n_start <- (slurm_arrayid - 1) * df_optim$task_per_array + 1
+n_end <- n_start + (df_optim$task_per_array - 1)
+if (n_end > nrow(input_data)) n_end <- nrow(input_data)
+n <- seq(n_start, n_end)
+```
+
+This selects the iterations between `r n_start` and `r n_end`.
+
+### Getting the TAM-DM data
+
+We now calculate the TAM-DM.
+We first compute the tile extents with `get_input_polygons()` and feed the resulting `SpatialPolygons` to `get_terrain_metrics()` which produces a stack of terrain analysis `Raster` objects.
+This is then summarized with `get_stats_df()` at the level of the entire tile (`raster_stats`) and along a 100-m riparian buffer (`near_channel_stats`), requiring to retrieve the `target_strealines` with `get_target_streamlines()`.
+
+```{r getting_tam_dm, warning = FALSE}
+# if(!file.exists(fname_tam)){
+	dem_dir <- "/vsicurl/https://riverml.s3-us-west-2.amazonaws.com/"
+	dem_file <- "DEM_SFE.tif"
+	DEM <- raster(paste0(dem_dir, dem_file))
+	polys <- get_input_polygons(input_data, n, DEM, .dl = 25)
+	ls <- get_terrain_metrics(polys, DEM, curvature = FALSE)
+
+	# raster stats
+	raster_stats_df <- get_stats_df(raster_stats, "rstr", ls, dem_file)
+
+	# near channel stats
+	target_streamlines <- get_target_streamlines(region)
+	target_streamlines <- target_streamlines[n, ]
+	near_channel_stats_df <- get_stats_df(near_channel_stats, "nrch", ls, dem_file, lines = target_streamlines)
+
+	target_data_df_tam <- cbind(raster_stats_df, near_channel_stats_df)
+	# write.csv(target_data_df_tam, file.path(fname_tam), row.names = FALSE)
+	# rm(DEM)
+	# gc()
+# }
+```
+
+```{r}
+target_data_df_tam %>% 
+	knitr::kable(digits = 3, format = "html", caption = "TAM-DM data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+### Getting the statistical roughness data
 
 
 ## Getting the StreamCat data

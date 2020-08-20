@@ -10,7 +10,7 @@ get_target_points_df(target_streamlines)
 \item{target_streamlines}{a SpatialLinesDataFrame}
 }
 \value{
-a data.frame with columns \code{Name}, \code{long} and \code{lat}
+a \code{data.frame} with columns \code{Name}, \code{long} and \code{lat}
 }
 \description{
 Extracts mid-points from streamlines

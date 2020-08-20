@@ -15,12 +15,18 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
 Imports:
-	sf,
-  sp,
-	raster,
-	methods,
+  dplyr,
+  kableExtra,
+  knitr,
   maptools,
-  rgdal
+  methods,
+  psych,
+  raster,
+  rgdal,
+  rgeos,
+  sf,
+  sp,
+  stringr
 Suggests: 
     testthat,
     knitr,

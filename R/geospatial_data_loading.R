@@ -32,7 +32,7 @@ get_target_streamlines <- function(region, extdir = NULL){
 
 #' Extracts mid-points from streamlines
 #' @param target_streamlines a SpatialLinesDataFrame
-#' @return a data.frame with columns `Name`, `long` and `lat`
+#' @return a `data.frame` with columns `Name`, `long` and `lat`
 #' @export
 get_target_points_df <- function(target_streamlines){
 	if(class(target_streamlines) != "SpatialLinesDataFrame") stop("`target_streamlines` is not a SpatialLinesDataFrame")
@@ -51,7 +51,7 @@ get_target_points_df <- function(target_streamlines){
 #' @param dl a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile
 #' @param .crs a `sp::CRS`, usually the one from the DEM to be tiled
 #' @export
-getpol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84")){
+get_pol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84")){
 	x_min <- pts@coords[i,1] - dl
 	x_max <- pts@coords[i,1] + dl
 	y_min <- pts@coords[i,2] - dl
@@ -63,6 +63,35 @@ getpol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84
 	               x_min, y_min), 
 	             ncol = 2, byrow = TRUE)
 	p <-  sp::Polygon(coords)
-	sp1 <-  sp::SpatialPolygons(list(Polygons(list(p), ID = "a")), proj4string=.crs)
+	sp1 <-  sp::SpatialPolygons(list(sp::Polygons(list(p), ID = "a")), proj4string=.crs)
 	return(sp1)
+}
+
+#' Loading input data
+#' @param fpath a `file.path` to an input `.csv` file
+#' @return a `data.frame` with columns `Name`, `long` and `lat`
+#' @export
+get_input_data <- function(fpath){
+	if(!file.exists(fpath)) stop("Input file does not exist.")
+	input_data <- read.csv(fpath, header=TRUE, sep = ",")
+	if(!all(c("Name", "long", "lat") %in% colnames(input_data))) stop("Input data has the wrong format.")
+	input_data <- na.omit(input_data) %>% dplyr::arrange(Name)
+	return(input_data)
+}
+
+#' Get the polygons for a set of locations defined by `input_data` and `n`
+#' @param input_data a `data.frame` with columns `lon` and `lat`
+#' @param n numeric the indices of the rows of input_data to use
+#' @param DEM a `raster` object
+#' @param .dl a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile
+#' @return a list of SpatialPolygon
+#' @export
+get_input_polygons <- function(input_data, n, DEM, .dl = 25){
+	if(!raster::isLonLat(DEM)) warning("Raster is not in LongLat format. Proceeding but raising warning...")
+	lonlat <- cbind(input_data$lon,input_data$lat)
+	crdref <- sp::CRS('+proj=longlat +datum=WGS84')
+	pts <- sp::SpatialPoints(lonlat, proj4string = crdref)
+	pts <- sp::spTransform(pts, crs(DEM))
+	polys <- lapply(n, function(i) get_pol(i, pts, dl = .dl * raster::res(DEM)[1], .crs = raster::crs(DEM)))
+	return(polys)
 }
