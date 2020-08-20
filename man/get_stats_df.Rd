@@ -10,7 +10,7 @@ get_stats_df(
   ls,
   dem_file,
   lines = NULL,
-  stat = c("median", "mean", "min", "max", "sd", "skewness")
+  stat = c(median, mean, min, max, sd, e1071::skewness)
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ get_stats_df(
 
 \item{lines}{a SpatialLinesDataFrame}
 
-\item{stat}{character, list of statistics to derive}
+\item{stat}{functions, list of statistics to derive}
 }
 \value{
 a \code{data.frame} with the values for the requested terrain analysis distribution metrics

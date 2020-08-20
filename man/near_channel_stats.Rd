@@ -4,7 +4,7 @@
 \alias{near_channel_stats}
 \title{Derive near-channel statistics: "median","mean", "min", "max", "sd", "skew"}
 \usage{
-near_channel_stats(i, .ls, .lines, .stat)
+near_channel_stats(i, .ls, .lines, .stat, bf = 100)
 }
 \arguments{
 \item{i}{numeric, indice}
@@ -14,6 +14,8 @@ near_channel_stats(i, .ls, .lines, .stat)
 \item{.lines}{a SpatialLinesDataFrame, passed from \code{get_stats_df()}}
 
 \item{.stat}{character, list of statistics to derive, passed from \code{get_stats_df()}}
+
+\item{bf}{numeric, size of the riparian buffer, default to 100 m}
 }
 \value{
 a numeric vector of statistics

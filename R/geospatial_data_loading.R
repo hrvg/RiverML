@@ -3,7 +3,6 @@
 #' @param region defines the area of study and the files loaded
 #' @param extdir default to `NULL`, if not `NULL` this indicates a `file.path` or `character` pointing to a directory external to the package. This function expects to find shapefiles named `region_200m_VAA_LDD.shp` in `extdir`.
 #' @return a SpatialLinesDataFrame
-#' @example get_target_streamlines("SFE")
 #' @importFrom methods as
 #' @import raster
 #' @export
@@ -71,6 +70,9 @@ get_pol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS8
 #' Loading input data
 #' @param fpath a `file.path` to an input `.csv` file
 #' @return a `data.frame` with columns `Name`, `long` and `lat`
+#' @importFrom utils read.csv
+#' @importFrom magrittr %>%
+#' @importFrom stats na.omit
 #' @export
 get_input_data <- function(fpath){
 	if(!file.exists(fpath)) stop("Input file does not exist.")

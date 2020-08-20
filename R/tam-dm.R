@@ -3,7 +3,6 @@
 #' @param .ls a RasterStack of terrain analysis rasters, passed from `get_stats_df()`
 #' @param .lines a SpatialLinesDataFrame, passed from `get_stats_df()`
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
-#' @importFrom e1071 skewness
 #' @return a numeric vector of statistics
 #' @export
 raster_stats <- function(i, .ls, .lines, .stat){
@@ -18,11 +17,11 @@ raster_stats <- function(i, .ls, .lines, .stat){
 #' @param .ls a RasterStack of terrain analysis rasters, passed from `get_stats_df()`
 #' @param .lines a SpatialLinesDataFrame, passed from `get_stats_df()`
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
+#' @param bf numeric, size of the riparian buffer, default to 100 m
 #' @import sp
-#' @importFrom e1071 skewness
 #' @return a numeric vector of statistics
 #' @export
-near_channel_stats <- function(i, .ls, .lines, .stat){
+near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 	.s <- .ls[[i]]
 	spext <- as(extent(.s), "SpatialPolygons")
 	proj4string(spext) <- sp::CRS(proj4string(.lines))
@@ -43,11 +42,11 @@ near_channel_stats <- function(i, .ls, .lines, .stat){
 #' @param ls a RasterStack of terrain analysis rasters
 #' @param dem_file character, DEM filename (used for fixing names)
 #' @param lines a SpatialLinesDataFrame
-#' @param stat character, list of statistics to derive
+#' @param stat functions, list of statistics to derive
+#' @importFrom stats median sd
 #' @return a `data.frame` with the values for the requested terrain analysis distribution metrics
-#' @importFrom e1071 skewness
 #' @export
-get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c("median", "mean", "min", "max", "sd", "skewness")){
+get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(median, mean, min, max, sd, e1071::skewness)){
 	if(!(any(identical(fun, raster_stats), identical(fun, near_channel_stats)))) stop("Wrong function!")
 	if(!is.null(lines)){
 		lines <- sp::spTransform(lines, raster::crs(ls[[1]]))
@@ -55,7 +54,8 @@ get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c("me
 	lv <- lapply(seq(1, length(ls)), fun, .ls = ls, .lines = lines, .stat = stat)
 	data_mat <- do.call(rbind, lv)
 	data_df <- data.frame(data_mat)
-	col_names <- outer(names(ls[[1]]), lapply(stat, function(x){ paste0("_",x)}), FUN = "paste0")
+	col_names <- outer(names(ls[[1]]), lapply(stat, function(x){ paste0("_", tail(as.character(substitute(x)), 1)
+)}), FUN = "paste0")
 	dim(col_names) <- NULL
 	col_names <- unlist(lapply(col_names, function(name) stringr::str_replace(name, tools::file_path_sans_ext(dem_file), "elevation")))
 	colnames(data_df) <- paste(col_names,fun_name, sep=".")
