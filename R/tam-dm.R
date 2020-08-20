@@ -3,6 +3,7 @@
 #' @param .ls a RasterStack of terrain analysis rasters, passed from `get_stats_df()`
 #' @param .lines a SpatialLinesDataFrame, passed from `get_stats_df()`
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
+#' @importFrom e1071 skewness
 #' @return a numeric vector of statistics
 #' @export
 raster_stats <- function(i, .ls, .lines, .stat){
@@ -18,13 +19,13 @@ raster_stats <- function(i, .ls, .lines, .stat){
 #' @param .lines a SpatialLinesDataFrame, passed from `get_stats_df()`
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
 #' @import sp
+#' @importFrom e1071 skewness
 #' @return a numeric vector of statistics
 #' @export
 near_channel_stats <- function(i, .ls, .lines, .stat){
 	.s <- .ls[[i]]
 	spext <- as(extent(.s), "SpatialPolygons")
 	proj4string(spext) <- sp::CRS(proj4string(.lines))
-	skew <- e1071::skewness
 	if(!is.null(rgeos::gIntersection(.lines, spext))){
 		.line <- raster::crop(.lines[sp::SpatialLinesLengths(.lines) > 1E-6, ], .s)
 		var_stats <- lapply(.stat, function(x){
@@ -44,8 +45,9 @@ near_channel_stats <- function(i, .ls, .lines, .stat){
 #' @param lines a SpatialLinesDataFrame
 #' @param stat character, list of statistics to derive
 #' @return a `data.frame` with the values for the requested terrain analysis distribution metrics
+#' @importFrom e1071 skewness
 #' @export
-get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c("median","mean", "min", "max", "sd", "skew")){
+get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c("median", "mean", "min", "max", "sd", "skewness")){
 	if(!(any(identical(fun, raster_stats), identical(fun, near_channel_stats)))) stop("Wrong function!")
 	if(!is.null(lines)){
 		lines <- sp::spTransform(lines, raster::crs(ls[[1]]))

@@ -10,7 +10,7 @@ get_stats_df(
   ls,
   dem_file,
   lines = NULL,
-  stat = c("median", "mean", "min", "max", "sd", "skew")
+  stat = c("median", "mean", "min", "max", "sd", "skewness")
 )
 }
 \arguments{
