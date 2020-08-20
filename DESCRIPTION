@@ -20,7 +20,7 @@ Imports:
   knitr,
   maptools,
   methods,
-  psych,
+  e1071,
   raster,
   rgdal,
   rgeos,

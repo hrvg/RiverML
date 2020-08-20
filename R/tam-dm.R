@@ -18,13 +18,13 @@ raster_stats <- function(i, .ls, .lines, .stat){
 #' @param .lines a SpatialLinesDataFrame, passed from `get_stats_df()`
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
 #' @import sp
-#' @importFrom psych skew
 #' @return a numeric vector of statistics
 #' @export
 near_channel_stats <- function(i, .ls, .lines, .stat){
 	.s <- .ls[[i]]
 	spext <- as(extent(.s), "SpatialPolygons")
 	proj4string(spext) <- sp::CRS(proj4string(.lines))
+	skew <- e1071::skewness
 	if(!is.null(rgeos::gIntersection(.lines, spext))){
 		.line <- raster::crop(.lines[sp::SpatialLinesLengths(.lines) > 1E-6, ], .s)
 		var_stats <- lapply(.stat, function(x){

@@ -25,6 +25,7 @@ get_target_streamlines <- function(region, extdir = NULL){
 		attr_names[which(attr_names == "Slope")] <- "SLOPE"
 		warning("Changing attribute name: Area -> AREA")
 		attr_names[which(attr_names == "Area")] <- "AREA"
+		names(target_streamlines) <- attr_names
 	}
 	target_streamlines$ID <- seq(nrow(target_streamlines))
 	return(target_streamlines)
@@ -91,7 +92,7 @@ get_input_polygons <- function(input_data, n, DEM, .dl = 25){
 	lonlat <- cbind(input_data$lon,input_data$lat)
 	crdref <- sp::CRS('+proj=longlat +datum=WGS84')
 	pts <- sp::SpatialPoints(lonlat, proj4string = crdref)
-	pts <- sp::spTransform(pts, crs(DEM))
+	pts <- sp::spTransform(pts, raster::crs(DEM))
 	polys <- lapply(n, function(i) get_pol(i, pts, dl = .dl * raster::res(DEM)[1], .crs = raster::crs(DEM)))
 	return(polys)
 }
