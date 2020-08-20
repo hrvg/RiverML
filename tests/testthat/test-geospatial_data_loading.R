@@ -9,6 +9,7 @@ test_that("get_input_data works", {
 context("get_target_streamlines")
 test_that("get_target_streamlines works", {
 	streamlines <- get_target_streamlines("SFE")
+	expect_true(all.equal(streamlines, target_streamlines_SFE))
 	expect_is(streamlines, "SpatialLinesDataFrame")
 	expect_true('CONFINEMEN' %in% names(streamlines))
 	expect_true('SLOPE' %in% names(streamlines))

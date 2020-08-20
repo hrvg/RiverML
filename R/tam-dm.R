@@ -28,7 +28,7 @@ near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 	if(!is.null(rgeos::gIntersection(.lines, spext))){
 		.line <- raster::crop(.lines[sp::SpatialLinesLengths(.lines) > 1E-6, ], .s)
 		var_stats <- lapply(.stat, function(x){
-			apply(extract(.s, .line, fun = x, na.rm = TRUE, buffer = bf), MARGIN = 2, FUN = mean)
+			apply(raster::extract(.s, .line, fun = x, na.rm = TRUE, buffer = bf), MARGIN = 2, FUN = mean)
 			})
 		return(as.vector(unlist(var_stats)))			
 	} else {

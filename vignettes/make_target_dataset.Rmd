@@ -25,7 +25,6 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 ```{r setup}
 library(RiverML)
 library(raster)
-library(magrittr)
 ```
 
 # Loading data
@@ -53,8 +52,7 @@ We first define a region of study with the variable `region` and check that `get
 ```{r get_target_streamlines}
 region <- "SFE"
 target_streamlines <- get_target_streamlines(region)
-data(target_streamlines_SFE)
-identical(target_streamlines, target_streamlines_SFE)
+all.equal(target_streamlines, target_streamlines_SFE)
 target_streamlines
 ```
 
