@@ -22,7 +22,7 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 
 # Libraries
 
-```{r setup}
+```{r setup, warning = FALSE, message = FALSE}
 library(magrittr)
 library(RiverML)
 library(raster)
@@ -198,13 +198,13 @@ This is then summarized with `get_stats_df()` at the level of the entire tile (`
 	near_channel_stats_df <- get_stats_df(near_channel_stats, "nrch", ls, dem_file, lines = target_streamlines)
 
 	target_data_df_tam <- cbind(raster_stats_df, near_channel_stats_df)
-	# write.csv(target_data_df_tam, file.path(fname_tam), row.names = FALSE)
-	# rm(DEM)
+	# write.csv(target_data_df_tam, file.path(fname_tam), row.names = FALSE) # saving
+	# rm(DEM) # clean up
 	# gc()
 # }
 ```
 
-```{r}
+```{r, echo = FALSE}
 target_data_df_tam %>% 
 	knitr::kable(digits = 3, format = "html", caption = "TAM-DM data") %>% 
 	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
@@ -213,5 +213,24 @@ target_data_df_tam %>%
 
 ### Getting the statistical roughness data
 
+Rasters of the statistical roughness of California were computed using the `R` package `statisticalRoughness` from scales from `r min(get_H_rasters()$upper_scales)` to `r max(get_H_rasters()$upper_scales)` meters.
+The resulting rasters and associated scales are loaded with `get_H_rasters()`.
+
+```{r getting_H, warning = FALSE}
+# if(!file.exists(fname_H)){
+	lH <- get_H_rasters()
+	H_rasters <- lH$H_rasters
+	upper_scales <- lH$upper_scales
+	target_data_df_H <- join_streamlines_with_H_rasters(H_rasters, target_streamlines, upper_scales)
+	# write.csv(target.data_df_H, file.path(fname_H), row.names = FALSE) # saving
+# }
+```
+
+```{r, echo = FALSE}
+target_data_df_H %>% 
+	knitr::kable(digits = 3, format = "html", caption = "statistical roughness data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
 
 ## Getting the StreamCat data
