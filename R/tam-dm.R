@@ -43,10 +43,11 @@ near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 #' @param dem_file character, DEM filename (used for fixing names)
 #' @param lines a SpatialLinesDataFrame
 #' @param stat functions, list of statistics to derive
+#' @param stat_name character, labels corresponding to `stat`
 #' @importFrom stats median sd
 #' @return a `data.frame` with the values for the requested terrain analysis distribution metrics
 #' @export
-get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(median, mean, min, max, sd, e1071::skewness)){
+get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(median, mean, min, max, sd, e1071::skewness), stat_name = c("median", "mean", "min", "max", "sd", "skew")){
 	if(!(any(identical(fun, raster_stats), identical(fun, near_channel_stats)))) stop("Wrong function!")
 	if(!is.null(lines)){
 		lines <- sp::spTransform(lines, raster::crs(ls[[1]]))
@@ -54,8 +55,7 @@ get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(med
 	lv <- lapply(seq(1, length(ls)), fun, .ls = ls, .lines = lines, .stat = stat)
 	data_mat <- do.call(rbind, lv)
 	data_df <- data.frame(data_mat)
-	col_names <- outer(names(ls[[1]]), lapply(stat, function(x){ paste0("_", tail(as.character(substitute(x)), 1)
-)}), FUN = "paste0")
+	col_names <- outer(names(ls[[1]]), stat_name, FUN = "paste", sep = "_")
 	dim(col_names) <- NULL
 	col_names <- unlist(lapply(col_names, function(name) stringr::str_replace(name, tools::file_path_sans_ext(dem_file), "elevation")))
 	colnames(data_df) <- paste(col_names,fun_name, sep=".")
