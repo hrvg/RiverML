@@ -23,6 +23,7 @@ The [training dataset](make_training_dataset.html) is extracted from the target 
 # Libraries
 
 ```{r setup}
+library(magrittr)
 library(RiverML)
 library(raster)
 ```
