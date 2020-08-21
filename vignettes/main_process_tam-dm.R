@@ -61,12 +61,9 @@ if(!file.exists(fname_tam)){
 }
 
 if(!file.exists(fname_H)){
-	###############
-	### GET LLH ###
-	###############
-	l <- get_H_raster()
-	llH <- l$llH
-	hb.scales <- l$hb.scales
-	target.data_df_H <- sp.join_pts.llH(llH, target_cls[n, ])
-	write.csv(target.data_df_H, file.path(fname_H), row.names = FALSE)
+	lH <- get_H_rasters()
+	H_rasters <- lH$H_rasters
+	upper_scales <- lH$upper_scales
+	target_data_df_H <- join_streamlines_with_H_rasters(H_rasters, target_streamlines, upper_scales)
+	write.csv(target_data_df_H, file.path(fname_H), row.names = FALSE)
 }

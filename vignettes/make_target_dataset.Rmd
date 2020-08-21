@@ -16,9 +16,8 @@ knitr::opts_chunk$set(
 
 # Purpose
 
-This vignette documents the workflow to create the target dataset_
+This vignette documents the workflow to create the target dataset.
 The [training dataset](make_training_dataset.html) is extracted from the target data set at selected labelled locations.
-
 
 # Libraries
 
@@ -222,7 +221,7 @@ The resulting rasters and associated scales are loaded with `get_H_rasters()`.
 	H_rasters <- lH$H_rasters
 	upper_scales <- lH$upper_scales
 	target_data_df_H <- join_streamlines_with_H_rasters(H_rasters, target_streamlines, upper_scales)
-	# write.csv(target.data_df_H, file.path(fname_H), row.names = FALSE) # saving
+	# write.csv(target_data_df_H, file.path(fname_H), row.names = FALSE) # saving
 # }
 ```
 
@@ -234,3 +233,128 @@ target_data_df_H %>%
 ```
 
 ## Getting the StreamCat data
+
+Typically, the following chunks are executed after having calculated `target_data_df_H` and `target_data_df_tam` for each HPC array.
+Now is time to join all of them and to add StreamCat data to the resulting unified `data.frame`.
+
+### Loading StreamCat data
+
+StreamCat data are publicly [available](ftp://newftp.epa.gov/EPADataCommons/ORD/NHDPlusLandscapeAttributes/StreamCat/HydroRegions/).
+In our case, we retrieved the following data from HydroRegions corresponding to California, Nevada and Oregon:
+
+- ICI_IWI_Region18
+- Lithology_Region18
+- Mines_Region18
+- MinesRipBuf100_Region18
+- NLCD2011_Region18
+- NLCD2011RipBuf100_Region18
+- PRISM_1981_2010_Region18
+- Runoff_Region18
+- STATSGO_Set1_Region18
+- STATSGO_Set2_Region18
+
+These data are aggregated into `streamcat_df` with `get_streamcat_df()`.
+
+An cloud-based version of `streamcat_df` can be loaded directly with:
+
+```{r}
+streamcat_df <- data.table::fread("https://riverml.s3-us-west-2.amazonaws.com/streamcat_df.csv.bz2")
+```
+
+```{r, echo = FALSE}
+streamcat_df %>%
+	head(20) %>% 
+	knitr::kable(digits = 3, format = "html", caption = "StreamCat data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+### Loading the `target_streamlines` (again)
+
+Because, as explained, these chunks are likely executed in a separate run than the previous ones, we need to reload the `target_streamlines`.
+For the sake of this vignette, we keep the reduced version with only `r n` stream intervals.
+
+```
+target_streamlines <- get_target_streamlines(region)
+```
+
+Using `get_target_streamcat_df()`, we bind select the lines of `streamcat_df` matching the `COMID` of `target_streamlines`.
+`get_target_streamcat_df()` also drops some variables under the hood that are not required for our predictions.
+
+```{r}
+target_streamcat_df <- get_target_streamcat_df(streamcat_df, target_streamlines)
+```
+
+```{r, echo = FALSE}
+target_streamcat_df %>%
+	knitr::kable(digits = 3, format = "html", caption = "StreamCat data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+### Adding GIS predictors
+
+We can now add some predictors stored in `target_streamlines`: slope (`SLOPE`), valley confinement distance (`CONFINEMEN`), an estimate of sediment-supply (`RUSLE`), the Strahler's stream order (`SO`) and the local drainage density (`LDD`).
+Finally, we drop the `COMID`.
+
+```{r}
+target_streamcat_df <- cbind(target_streamcat_df,
+	SLOPE = target_streamlines$SLOPE,
+	CONFINEMEN = target_streamlines$CONFINEMEN, 
+	RUSLE = target_streamlines$RUSLE,
+	SO = target_streamlines$StreamOrde,
+	LDD = target_streamlines$LDD)
+target_streamcat_df$COMID <- NULL
+```
+
+### Loading TAM-DM and statistical roughness results
+
+The following two chunks the `.csv` files corresponding to all arrays.
+
+```
+lf <- list.files(file.path(outdir), pattern = "tam.csv")
+ids <- unlist(lapply(lf, function(x) unlist(strsplit(x,"_"))[1]))
+ids <- sapply(ids, as.numeric)
+lf <- lf[order(ids)]
+l_target_data_df_tam <- lapply(lf, function(f) read.csv(file.path(outdir, f)))
+target_data_df_tam <- do.call(rbind, l_target_data_df_tam)
+```
+
+```
+lf <- list.files(file.path(outdir), pattern = "H.csv")
+ids <- unlist(lapply(lf, function(x) unlist(strsplit(x,"_"))[1]))
+ids <- sapply(ids, as.numeric)
+lf <- lf[order(ids)]
+l_target_data_df_H <- lapply(lf, function(f) read.csv(file.path(outdir, f)))
+target_data_df_H <- do.call(rbind, l_target_data_df_H)
+```
+
+### Binding everything
+
+Finally, we can bind together the data from StreamCat, the TAM-DM and the statistical roughness.
+
+```{r}
+target_data_df <- cbind(target_streamcat_df, target_data_df_tam, target_data_df_H)
+# write.csv(target_data_df, file = file.path(outdir, paste0(region, '_all_data_df.csv')), row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+target_data_df %>%
+	knitr::kable(digits = 3, format = "html", caption = "target data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+We also save a reminder of the `ID` of the computed data as well as their associated `COMID`.
+
+```{r}
+target_ID_df <- data.frame(ID = target_streamlines$ID, COMID = target_streamlines$COMID)
+# write.csv(target_ID_df, file = file.path(outdir, paste0(region, '_all_ID_df.csv')), row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+target_ID_df %>%
+	knitr::kable(digits = 3, format = "html", caption = "target ID") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```

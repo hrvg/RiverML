@@ -15,13 +15,15 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
 Imports:
+  data.table,
   dplyr,
+  e1071,
   kableExtra,
   knitr,
-  maptools,
   magrittr,
+  maptools,
   methods,
-  e1071,
+  R.utils,
   raster,
   rgdal,
   rgeos,
