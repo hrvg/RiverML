@@ -13,4 +13,4 @@ data(target_streamlines_SECA)
 \description{
 Target streamlines for the SECA region
 }
-\keyword{datasets}
+\keyword{dataset}

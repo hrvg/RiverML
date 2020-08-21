@@ -13,4 +13,4 @@ data(target_streamlines_SFE)
 \description{
 Target streamlines for the SFE region
 }
-\keyword{datasets}
+\keyword{dataset}

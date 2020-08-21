@@ -15,3 +15,4 @@ a named list with two elements \code{H_rasters} and \code{upper_scales}
 \description{
 Retrieve rasters of statistical roughness of topography
 }
+\keyword{statistical-roughness}

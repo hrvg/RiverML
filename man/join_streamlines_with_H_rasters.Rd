@@ -19,3 +19,4 @@ a \code{data.frame}
 \description{
 Extract the values of all H_rasters along streamlines
 }
+\keyword{statistical-roughness}

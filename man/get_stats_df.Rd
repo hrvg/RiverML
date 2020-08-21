@@ -35,3 +35,4 @@ a \code{data.frame} with the values for the requested terrain analysis distribut
 \description{
 Wrapper function to calculate terrain analysis statistics for a RasterStack
 }
+\keyword{tam-dm}

@@ -20,3 +20,4 @@ a \code{data.frame} with StreamCat data
 \description{
 Get the StreamCat data
 }
+\keyword{streamcat}

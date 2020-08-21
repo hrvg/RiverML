@@ -36,3 +36,5 @@ a \code{data.frame} with columns \code{task_per_array}, \code{exec_time_min} and
 This function uses the limits of maximum concurrent jobs, the input/output time and computng time.
 The time are derived using \code{profvis} package.
 }
+\keyword{HPC}
+\keyword{misc}

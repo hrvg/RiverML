@@ -5,6 +5,7 @@
 #' @param .stat character, list of statistics to derive, passed from `get_stats_df()`
 #' @return a numeric vector of statistics
 #' @export
+#' @keywords tam-dm
 raster_stats <- function(i, .ls, .lines, .stat){
 	.s <- .ls[[i]]
 	.n <- raster::nlayers(.s)
@@ -21,6 +22,7 @@ raster_stats <- function(i, .ls, .lines, .stat){
 #' @import sp
 #' @return a numeric vector of statistics
 #' @export
+#' @keywords tam-dm
 near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 	.s <- .ls[[i]]
 	spext <- as(extent(.s), "SpatialPolygons")
@@ -47,6 +49,7 @@ near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 #' @importFrom stats median sd
 #' @return a `data.frame` with the values for the requested terrain analysis distribution metrics
 #' @export
+#' @keywords tam-dm
 get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(median, mean, min, max, sd, e1071::skewness), stat_name = c("median", "mean", "min", "max", "sd", "skew")){
 	if(!(any(identical(fun, raster_stats), identical(fun, near_channel_stats)))) stop("Wrong function!")
 	if(!is.null(lines)){
@@ -67,6 +70,7 @@ get_stats_df <- function(fun, fun_name, ls, dem_file, lines = NULL, stat = c(med
 #' @param DEM a Raster
 #' @param curvature logical, default to `FALSE`, if `TRUE` allows the calculation of profile and planform curvature
 #' @export
+#' @keywords tam-dm
 get_terrain_metrics <- function(polys, DEM, curvature = FALSE){
 	llr <- lapply(seq_along(polys), function(i){
 			p <- polys[[i]]

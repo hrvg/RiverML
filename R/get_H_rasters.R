@@ -2,6 +2,7 @@
 #' @param extdir default to `NULL`, if not `NULL` this indicates a `file.path` or `character` pointing to a directory external to the package. This function expects to find shapefiles named `scale.grd` in `extdir`.
 #' @return a named list with two elements `H_rasters` and `upper_scales`
 #' @export
+#' @keywords statistical-roughness
 get_H_rasters <- function(extdir = NULL){
 	if(is.null(extdir)){
 		extdir <- system.file("extdata/statistical_roughness/", package = "RiverML")
@@ -22,6 +23,7 @@ get_H_rasters <- function(extdir = NULL){
 #' @param upper_scales the upper scales corresponding to `H_rasters` (for naming)
 #' @return a `data.frame`
 #' @export
+#' @keywords statistical-roughness
 join_streamlines_with_H_rasters <- function(H_rasters, streamlines, upper_scales){
 	v <- lapply(H_rasters, function(x){raster::extract(x, streamlines, fun = mean)})
 	v <- matrix(unlist(v), nrow = length(streamlines), ncol = length(H_rasters))

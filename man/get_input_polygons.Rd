@@ -21,3 +21,4 @@ a list of SpatialPolygon
 \description{
 Get the polygons for a set of locations defined by \code{input_data} and \code{n}
 }
+\keyword{geospatial-data}

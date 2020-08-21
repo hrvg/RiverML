@@ -13,4 +13,4 @@ data(target_streamlines_SAC)
 \description{
 Target streamlines for the SAC region
 }
-\keyword{datasets}
+\keyword{dataset}

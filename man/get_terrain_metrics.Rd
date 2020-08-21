@@ -16,3 +16,4 @@ get_terrain_metrics(polys, DEM, curvature = FALSE)
 \description{
 Get the terrain analysis metrics
 }
+\keyword{tam-dm}

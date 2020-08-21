@@ -19,3 +19,4 @@ a SpatialLinesDataFrame
 Load a SpatialLinesDataFrame containing values for valley confinement, GIS slope and RUSLE.
 The SpatialDataFrame source data is the NHDv2Plus dataset which is segmented into 200-m stream intervals.
 }
+\keyword{geospatial-data}

@@ -6,6 +6,7 @@
 #' @importFrom methods as
 #' @import raster
 #' @export
+#' @keywords geospatial-data
 get_target_streamlines <- function(region, extdir = NULL){
 	if(is.null(extdir)){
 		target_streamlines_file <- system.file("extdata/target_streamlines/", paste0(region, "_200m_VAA_LDD.shp"), package = "RiverML")
@@ -34,6 +35,7 @@ get_target_streamlines <- function(region, extdir = NULL){
 #' @param target_streamlines a SpatialLinesDataFrame
 #' @return a `data.frame` with columns `Name`, `long` and `lat`
 #' @export
+#' @keywords geospatial-data
 get_target_points_df <- function(target_streamlines){
 	if(class(target_streamlines) != "SpatialLinesDataFrame") stop("`target_streamlines` is not a SpatialLinesDataFrame")
 	target_points <- maptools::SpatialLinesMidPoints(target_streamlines)
@@ -51,6 +53,7 @@ get_target_points_df <- function(target_streamlines){
 #' @param dl a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile
 #' @param .crs a `sp::CRS`, usually the one from the DEM to be tiled
 #' @export
+#' @keywords geospatial-data
 get_pol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84")){
 	x_min <- pts@coords[i,1] - dl
 	x_max <- pts@coords[i,1] + dl
@@ -74,6 +77,7 @@ get_pol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS8
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
 #' @export
+#' @keywords geospatial-data
 get_input_data <- function(fpath){
 	if(!file.exists(fpath)) stop("Input file does not exist.")
 	input_data <- read.csv(fpath, header=TRUE, sep = ",")
@@ -89,6 +93,7 @@ get_input_data <- function(fpath){
 #' @param .dl a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile
 #' @return a list of SpatialPolygon
 #' @export
+#' @keywords geospatial-data
 get_input_polygons <- function(input_data, n, DEM, .dl = 25){
 	if(!raster::isLonLat(DEM)) warning("Raster is not in LongLat format. Proceeding but raising warning...")
 	lonlat <- cbind(input_data$lon,input_data$lat)

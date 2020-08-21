@@ -23,3 +23,4 @@ a numeric vector of statistics
 \description{
 Derive near-channel statistics: "median","mean", "min", "max", "sd", "skew"
 }
+\keyword{tam-dm}

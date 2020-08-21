@@ -11,6 +11,7 @@
 #' @param pl logical, if `TRUE` a plot is produced, default to `TRUE`
 #' @param core_per_task number of CPU per task, default to 1.
 #' @return a `data.frame` with columns `task_per_array`, `exec_time_min` and `n_array`
+#' @keywords misc HPC
 #' @export
 HPC_optim <- function(len, hpc_lim = 1e4, io_time = 20e3, computing_time = 1830, AssocGrpCpuLimit = 258, pl = TRUE, core_per_task = 1){
   avail <- floor(AssocGrpCpuLimit / core_per_task)

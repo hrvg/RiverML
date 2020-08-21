@@ -13,4 +13,4 @@ data(target_streamlines_SCC)
 \description{
 Target streamlines for the SCC region
 }
-\keyword{datasets}
+\keyword{dataset}

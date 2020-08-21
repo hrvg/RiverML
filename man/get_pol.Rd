@@ -18,3 +18,4 @@ get_pol(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS84"))
 \description{
 Get a SpatialPolygons around a point
 }
+\keyword{geospatial-data}

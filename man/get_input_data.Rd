@@ -15,3 +15,4 @@ a \code{data.frame} with columns \code{Name}, \code{long} and \code{lat}
 \description{
 Loading input data
 }
+\keyword{geospatial-data}

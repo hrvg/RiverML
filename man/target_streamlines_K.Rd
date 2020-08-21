@@ -13,4 +13,4 @@ data(target_streamlines_K)
 \description{
 Target streamlines for the K region
 }
-\keyword{datasets}
+\keyword{dataset}

@@ -1,0 +1,17 @@
+reference:
+  - title: Getting target data
+  - subtitle: Geospatial data
+  - contents:
+    - has_keyword("geospatial-data")
+  - subtitle: Statistical roughness
+  - contents:
+    - has_keyword("statistical-roughness")
+  - subtitle: StreamCat
+  - contents:
+    - has_keyword("streamcat")
+  - title: Datasets
+  - contents:
+    - has_keyword("dataset")
+  - title: Misc
+  - contents:
+    - has_keyword("misc")

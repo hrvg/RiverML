@@ -13,4 +13,4 @@ data(target_streamlines_SJT)
 \description{
 Target streamlines for the SJT region
 }
-\keyword{datasets}
+\keyword{dataset}

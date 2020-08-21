@@ -17,3 +17,4 @@ a \code{data.frame} with dropped variables
 \description{
 Remove some variables from \code{streamcat_df}
 }
+\keyword{streamcat}

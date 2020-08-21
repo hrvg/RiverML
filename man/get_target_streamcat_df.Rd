@@ -17,3 +17,4 @@ a \code{data.frame}, the cleaned and matched \code{streamcat.df}
 \description{
 Matches \code{streamcat_df} and \code{target_streamlines} using \code{COMID}
 }
+\keyword{streamcat}

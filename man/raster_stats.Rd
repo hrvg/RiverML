@@ -21,3 +21,4 @@ a numeric vector of statistics
 \description{
 Derive raster statistics: "median","mean", "min", "max", "sd", "skew"
 }
+\keyword{tam-dm}

@@ -2,6 +2,7 @@
 #' @param streamcat_dir `character` or `file.path` to a directory containing the StreamCat data
 #' @param hydro_regions `character`, target US HydroRegion
 #' @return a `data.frame` with StreamCat data
+#' @keywords streamcat
 #' @export
 get_streamcat_df <- function(streamcat_dir, hydro_regions = c("Region18", "Region16", "Region15")){
 	lf <- list.files(path = file.path(streamcat_dir), full.names = TRUE, recursive = TRUE)
@@ -25,6 +26,7 @@ get_streamcat_df <- function(streamcat_dir, hydro_regions = c("Region18", "Regio
 #' @param streamcat_df a `data.frame`
 #' @param .type `character`, one of `WsCat`, `Ws` or `Cat`
 #' @return a `data.frame` with dropped variables
+#' @keywords streamcat
 #' @export
 drops_streamcat_df <- function(streamcat_df, .type ="WsCat"){
 	if(.type == "Ws"){
@@ -42,6 +44,7 @@ drops_streamcat_df <- function(streamcat_df, .type ="WsCat"){
 #' @param streamcat_df a `data.frame` with `COMID` column
 #' @param target_streamlines a `SpatialLinesDataFrame` with `COMID` attribute
 #' @return a `data.frame`, the cleaned and matched `streamcat.df`
+#' @keywords streamcat
 #' @export
 get_target_streamcat_df <- function(streamcat_df, target_streamlines){
 	if(!"COMID" %in% colnames(streamcat_df)) stop("COMID not found in streamcat_df")

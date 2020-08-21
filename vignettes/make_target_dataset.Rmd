@@ -272,7 +272,7 @@ streamcat_df %>%
 ### Loading the `target_streamlines` (again)
 
 Because, as explained, these chunks are likely executed in a separate run than the previous ones, we need to reload the `target_streamlines`.
-For the sake of this vignette, we keep the reduced version with only `r n` stream intervals.
+For the sake of this vignette, we keep the reduced version with only `r length(target_streamlines)` stream intervals.
 
 ```
 target_streamlines <- get_target_streamlines(region)
