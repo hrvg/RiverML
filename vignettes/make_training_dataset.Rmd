@@ -17,8 +17,73 @@ knitr::opts_chunk$set(
 # Purpose
 
 This vignette documents the workflow to create the training dataset which is extracted from the [target dataset](make_target_dataset.html) at selected labelled locations.
+Alternatively, if there is no need for a target dataset, for example, when prototype which spatial resolution to use for predictions, the workflow described for making the target dataset is wholly valid for creating a training dataset only.
 
+# Libraries
 
 ```{r setup}
 library(RiverML)
+```
+
+
+# Loading target data
+
+Here we use the example of the South Fork Eel (SFE) river catchment (California, USA) and load the target streamlines for this region.
+Notice that using `as.df = FALSE`, `get_target_points()` now returns a `SpatialPointsDataFrame` which is projected on latitude/longitude.
+
+```{r target_points}
+region <- "SFE"
+target_streamlines <- target_streamlines_SFE
+target_points <- get_target_points(target_streamlines, as.df = FALSE)
+target_points
+```
+
+`SFE_all_data_df` is included in the package and contains the target data for the SFE region.
+
+```{r target_data_df}
+target_data_df <- SFE_all_data_df
+dim(target_data_df)
+```
+
+```{r, echo = FALSE}
+head(target_data_df) %>% 
+	knitr::kable(digits = 3, format = "html", caption = "SFE target data") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+# Loading labelled locations
+
+We now use `get_input_data()` to load and sort an input `.csv` file and convert the information herein as a `SpatialPoints` object with `get_points_from_input_data()`.
+
+```{r input_data}
+input_dir <- system.file("extdata/input_data", package = "RiverML")
+fname <- paste0(region,"_input.csv")
+input_data <- get_input_data(file.path(input_dir, fname))
+head(input_data)
+labelled_points <- get_points_from_input_data(input_data)
+labelled_points
+```
+
+# Snapping labelled locations to target locations
+
+Using `snap_points_to_points()` we extract the indices of `target_points` corresponding to the minimum distances between the `labelled_points` and the `target_points`.
+
+```{r snap}
+snap <- snap_points_to_points(labelled_points, target_points)
+length(snap)
+head(snap)
+```
+
+From the `snap` indices, we can easily retrieve the training data, the corresponding `groups` and save.
+
+```{r}
+training_data_df <- target_data_df[snap, ]
+groups <- input_data$ward.grp
+# write.csv(training_data_df, # saving 
+# 	file = file.path(out_dir, paste0(region,'_data_df.csv')), 
+# 	row.names = FALSE)
+# write.csv(groups, # saving
+# 	file = file.path(out_dir, paste0(region,'_groups.csv')), 
+# 	row.names = FALSE)
 ```

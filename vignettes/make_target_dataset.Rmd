@@ -58,10 +58,10 @@ target_streamlines
 
 ## Getting `target_points`
 
-From the `target_streamlines`, we now extract the `target_points` using `get_target_points_df()` which returns a `data.frame` containing the location of the midpoints of all the 200-m stream intervals.
+From the `target_streamlines`, we now extract the `target_points` using `get_target_points()` which returns a `data.frame` containing the location of the midpoints of all the 200-m stream intervals.
 
 ```{r get_target_points}
-target_points <- get_target_points_df(target_streamlines)
+target_points <- get_target_points(target_streamlines)
 head(target_points)
 ```
 

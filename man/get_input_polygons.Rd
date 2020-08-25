@@ -4,7 +4,13 @@
 \alias{get_input_polygons}
 \title{Get the polygons for a set of locations defined by \code{input_data} and \code{n}}
 \usage{
-get_input_polygons(input_data, n, DEM, .dl = 25)
+get_input_polygons(
+  input_data,
+  n,
+  DEM,
+  .dl = 25,
+  .crs = sp::CRS("+proj=longlat +datum=WGS84")
+)
 }
 \arguments{
 \item{input_data}{a \code{data.frame} with columns \code{lon} and \code{lat}}
@@ -14,6 +20,8 @@ get_input_polygons(input_data, n, DEM, .dl = 25)
 \item{DEM}{a \code{raster} object}
 
 \item{.dl}{a number of pixel added in all direction to the coordinates of the i-th point in order to create a square tile}
+
+\item{.crs}{a \code{sp::CRS}, usually the one from the DEM to be tiled}
 }
 \value{
 a list of SpatialPolygon

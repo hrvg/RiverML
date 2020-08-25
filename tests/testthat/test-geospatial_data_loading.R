@@ -18,12 +18,13 @@ test_that("get_target_streamlines works", {
 	expect_error(get_target_streamlines("SFE", extdir = getwd()))
 })
 
-context("get_target_points_df")
-test_that("get_target_points_df works", {
+context("get_target_points")
+test_that("get_target_points works", {
 	data(target_streamlines_SFE)
-	points <- get_target_points_df(target_streamlines_SFE)
+	points <- get_target_points(target_streamlines_SFE)
 	expect_is(points, "data.frame")
-	expect_error(get_target_points_df(as.data.frame(target_streamlines_SFE)))
+	expect_is(get_target_points(target_streamlines_SFE, as.df = FALSE), "SpatialPointsDataFrame")
+	expect_error(get_target_points(as.data.frame(target_streamlines_SFE)))
 	expect_true(nrow(points) == length(target_streamlines_SFE))
 	expect_equal(colnames(points), c("Name", "long", "lat"))
 })

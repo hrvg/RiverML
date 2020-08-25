@@ -29,6 +29,7 @@ Imports:
   rgeos,
   sf,
   sp,
+  terra,
   stringr
 Suggests: 
     testthat,
