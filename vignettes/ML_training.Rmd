@@ -1,0 +1,166 @@
+---
+title: "ML training"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ML training}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Purpose
+
+This vignette documents the training part of the ML pipeline which performs a benchmark of multiple tasks with possibly multiple learners and feature selection.
+
+# Libraries
+
+```{r}
+# library(RiverML)
+devtools::load_all()
+```
+
+# Initialization
+
+## Parameters
+
+Variables in all caps represent the scripts parameters.
+
+| variable name | variable description                                                        | type           |
+|:--------------|:----------------------------------------------------------------------------|:---------------|
+| `FINAL`       | selects the type of runs, if `FALSE` trains, else predict                   | `logical`      |
+| `PATH`        | path to the output directory                                                | `character`    |
+| `REGIONS`     | vector of `region` identifiers (e.g. `"SFE"`)                               | `character`    |
+| `LRN_IDS`     | vector of learner identifiers (e.g. `"classif.randomForest"`)               | `character`    |
+| `PREPROC`     | vector of preprocessing identifiers (e.g. `"scale"`)                        | `character`    |
+| `TUNELENGTH`  | controls the number of hyper-parameters for discrete tuning                 | `numeric`      |
+| `ITERS`       | controls the number of tries for the random tuning                          | `numeric`      |
+| `PROB`        | selects the type of output, if `TRUE` probabilities, if `FALSE` response    | `logical`      |
+| `FS`          | if `TRUE` activates the feature selection                                   | `logical`      |
+| `FS_NUM`      | number of features to select if `FS` is `TRUE`                              | `numeric`      |
+| `TUNE_FS`     | if `TRUE` activates the feature selection tuning                            | `logical`      |
+| `FS_NUM_LIST` | list of number of features to select if `FS_TUNE` is `TRUE`                 | `numeric`      |
+| `NU`          | number of folds for the $\nu$-fold cross-validation                         | `numeric`      |
+| `REPS`        | number of repetitions for the repeated $\nu$-fold cross-validation          | `numeric`      |
+| `SPCV`        | if `TRUE` activates the spatial cross-validation                            | `logical`      |
+| `INNER`       | defines the inner folds for the nested resampling                           | `ResampleDesc` |
+| `MES`         | list of measures from the `mlr` package, the first one is optimized against | `list`         |
+| `INFO`        | controls the information printed by the training process                    | `logical`      |
+
+
+```{r}
+# TYPE OF RUN
+FINAL <- FALSE
+
+#PATH
+PATH <- "F:/hguillon/research/FS_MI_corr/10CV10-CV10_benchmarks_au1u_FS"
+
+# TASKS
+REGIONS <- c("SFE", "ALLSAC", "NC", "NCC", "SCC", "SC", "K", "SJT", "SECA")
+
+# LEARNERS
+LRN_IDS <- c(
+	"classif.nnTrain",
+	"classif.svm",
+	"classif.randomForest"
+)
+
+# PREPROCESSING
+PREPROC <- c("zv", "center", "scale", "medianImpute")
+
+# TUNING
+TUNELENGTH <- 16 # multiple of 8 please
+ITERS <- TUNELENGTH * 2
+
+# OUTPUT
+PROB <- TRUE
+
+# FEATURE SELECTION
+FS <- TRUE
+FS_NUM <- 20
+TUNE_FS <- TRUE
+FS_NUM_LIST <- seq(2, 50, by = 1)
+
+# RESAMPLING
+NU <- 10
+REPS <- 10
+SPCV <- FALSE
+INNER <- get_inner(FINAL, NU, REPS, SPCV)
+
+# OPTIMIZATION MEASURE
+MES <- list(mlr::multiclass.au1u, mlr::acc, mlr::mmce, mlr::multiclass.aunu, mlr::timetrain)
+print(paste("Optimizing against:", MES[[1]]$id))
+INFO <- FALSE
+```
+
+# Fetching benchmark data if `FINAL` is `TRUE`
+
+If the benchmark has already been run (with `FINAL <- FALSE`), we can retrieve the tuning results with `get_bestBMR_tuning_results()` which can be used to retrieve tuning and tuning entropy results.
+
+```
+if (FINAL){
+	bestBMR_tune <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_tune.Rds")
+	bestBMR_lrnH <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_lrnH.Rds")
+} 
+```
+
+# Starting the benchmark
+
+Once the parameters have been correctly defined, the benchmark is handled with `regional_benchmark()`.
+The `savePARAMETERS()` documents the parameters with which the benchmark is run.
+
+```
+if (TUNE_FS){
+	.PATH <- PATH
+	FS_NUM <- NULL
+	
+	if (FINAL){
+		FS_NUM_LIST <- bestBMR_lrnH %>% dplyr::pull(FS_NUM) %>% unique() %>% sort()
+	}
+
+	for (FS_NUM in FS_NUM_LIST){
+
+		PATH <- paste(.PATH, FS_NUM, sep = "_")
+		
+		if (!dir.exists(PATH)) dir.create(PATH)
+		savePARAMETERS(PATH, FINAL)
+
+		### BENCHMARK ###
+		bmrs <- regional_benchmark(regions = REGIONS, 
+			LRN_IDS, TUNELENGTH, INNER, ITERS, PROB, NU, REPS,
+			PREPROC, FINAL, PATH, REDUCED, MES, INFO, FS, FS_NUM)
+		names(bmrs) <- REGIONS
+	}
+} else {
+	
+	if (!dir.exists(PATH)) dir.create(PATH)
+	savePARAMETERS(PATH, FINAL)
+
+	### BENCHMARK ###
+	bmrs <- regional_benchmark(regions = REGIONS, 
+		LRN_IDS, TUNELENGTH, INNER, ITERS, PROB, NU, REPS,
+		PREPROC, FINAL, PATH, REDUCED, MES, INFO, FS, FS_NUM)
+	names(bmrs) <- REGIONS
+}
+```
+
+# Behind the scenes of `regional_benchmark()`
+
+`regional_benchmark()` is a wrapper function calling a number of functions.
+Here is a some pseudo-code that explains what is happening behind the scenes.
+
+1. _Skip_. Because `regional_benchmark()` is called inside the `for`-loop `for (FS_NUM in FS_NUM_LIST)` (see above), if `FINAL` is `TRUE`, `regional_benchmark()` skips the `region` it does not need to calculate the final models.
+1. _Data loading_. This handled by `get_training_data()`
+1. _Data formatting_. This is handled by `fmt_labels()`, `sanitize_data()` and `get_coords()`
+1. _Feature selection_.
+1. _Pre-processing_.
+1. _SMOTE_.
+1. _Tasks_.
+1. _Learners_.
+1. _Outer folds_.
+1. _Compute benchmark_.

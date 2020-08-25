@@ -15,3 +15,4 @@ snap_points_to_points(points_a, points_b)
 \description{
 Snaps points to points
 }
+\keyword{geospatial-data}

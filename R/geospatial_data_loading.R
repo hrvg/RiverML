@@ -114,6 +114,7 @@ get_input_polygons <- function(input_data, n, DEM, .dl = 25, .crs = sp::CRS('+pr
 #' @param .crs a `sp::CRS`, usually `+proj=longlat +datum=WGS84`
 #' @return a `SpatialPoints` object
 #' @export
+#' @keywords geospatial-data
 get_points_from_input_data <- function(input_data, .crs = sp::CRS("+proj=longlat +datum=WGS84")){
 	if(!all(c("long", "lat") %in% colnames(input_data))) stop("Input data has the wrong format.")
 	points <- sp::SpatialPoints(cbind(input_data$long, input_data$lat), proj4string = .crs)
@@ -122,9 +123,10 @@ get_points_from_input_data <- function(input_data, .crs = sp::CRS("+proj=longlat
 
 #' Snaps points to points
 #' @param points_a a `SpatialPoints` object
-#' @param points_b a `SpatialPoints` object\
+#' @param points_b a `SpatialPoints` object
 #' @return `numeric`, the indices in `points_b` that are the closest to each `points_a`
 #' @export
+#' @keywords geospatial-data
 snap_points_to_points <- function(points_a, points_b){
 	spdst <- terra::distance(terra::vect(points_a), terra::vect(points_b))
 	snap <- apply(spdst, 1, which.min)

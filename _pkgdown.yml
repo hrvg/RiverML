@@ -3,12 +3,22 @@ reference:
   - subtitle: Geospatial data
   - contents:
     - has_keyword("geospatial-data")
+  - subtitle: Terrain analysis
+  - contents:
+    - has_keyword("tam-dm")  
   - subtitle: Statistical roughness
   - contents:
     - has_keyword("statistical-roughness")
   - subtitle: StreamCat
   - contents:
     - has_keyword("streamcat")
+  - title: Machine learning
+  - subtitle: Data loading
+  - contents:
+    - has_keyword("ml-data-loading")  
+  - subtitle: Benchmark
+  - contents:
+    - has_keyword("ml-benchmark")  
   - title: Datasets
   - contents:
     - has_keyword("dataset")

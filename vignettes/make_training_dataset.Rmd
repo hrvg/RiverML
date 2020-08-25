@@ -23,8 +23,8 @@ Alternatively, if there is no need for a target dataset, for example, when proto
 
 ```{r setup}
 library(RiverML)
+library(magrittr)
 ```
-
 
 # Loading target data
 

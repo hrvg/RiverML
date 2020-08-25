@@ -20,3 +20,4 @@ a \code{SpatialPoints} object
 \description{
 Get the SpatialPoint from input data
 }
+\keyword{geospatial-data}
