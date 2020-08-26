@@ -156,11 +156,9 @@ Here is a some pseudo-code that explains what is happening behind the scenes.
 
 1. _Skip_. Because `regional_benchmark()` is called inside the `for`-loop `for (FS_NUM in FS_NUM_LIST)` (see above), if `FINAL` is `TRUE`, `regional_benchmark()` skips the `region` it does not need to calculate the final models.
 1. _Data loading_. This handled by `get_training_data()`
-1. _Data formatting_. This is handled by `fmt_labels()`, `sanitize_data()` and `get_coords()`
-1. _Feature selection_.
-1. _Pre-processing_.
-1. _SMOTE_.
-1. _Tasks_.
-1. _Learners_.
-1. _Outer folds_.
-1. _Compute benchmark_.
+1. _Data formatting_. This is handled by `fmt_labels()`, `sanitize_data()` and `get_coords()`.
+1. _Feature selection_. If `FINAL` is `TRUE` the selected features are retrieved from  ` get_bestBMR_tuning_results()`. If `FINAL` is `FALSE` the selected features are derived from transformed training data using `get_ppc()` and `preproc_data()`. The resulting transformed data are filtered for correlation higher than 0.95 with `caret::findCorrelation()`. Then, 500 subsampled `mlr` Tasks are created with `mlr::makeResampleDesc()`, `mlr::makeClassifTask()`, `mlr::makeResampleInstance()` and `mlr::filterFeatures()`. The `FS_NUM` most commonly select features across the 500 realizations are selected. 
+1. _Pre-processing_. The target and training data are transformed using `get_ppc()` on the target data and `preproc_data()` on the training data. SMOTE is applied using `get_smote_data()` and `get_smote_coords()` which both call `resolve_class_imbalance()`.
+1. _Tasks_. Tasks are obtained using `mlr::makeClassifTask()`.
+1. _Learners_. Learners are constructed using `get_learners()` or `get_final_learners()`.
+1. _Compute benchmark_. The benchmark is run with `compute_final_model()` or `compute_benchmark()` (which needs to retrieve the outer folds of the nested resampling with `get_outers()`).

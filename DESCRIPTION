@@ -15,21 +15,31 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
 Imports:
+  automap,
+  caret,
   data.table,
   dplyr,
   e1071,
+  gstat,
+  h2o,
   kableExtra,
   knitr,
   magrittr,
   maptools,
   methods,
+  mlr,
+  parallel,
+  parallelMap,
+  progress,
   R.utils,
   raster,
   rgdal,
   rgeos,
   sf,
   sp,
+  spacetime,
   terra,
+  UBL,
   stringr
 Suggests: 
     testthat,

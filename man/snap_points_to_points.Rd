@@ -8,6 +8,8 @@ snap_points_to_points(points_a, points_b)
 }
 \arguments{
 \item{points_a}{a \code{SpatialPoints} object}
+
+\item{points_b}{a \code{SpatialPoints} object}
 }
 \value{
 \code{numeric}, the indices in \code{points_b} that are the closest to each \code{points_a}

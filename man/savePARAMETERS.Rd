@@ -12,6 +12,23 @@ savePARAMETERS(PATH, FINAL)
 \item{FINAL}{\code{logical}, selects the type of runs, if \code{FALSE} trains, else predict}
 }
 \description{
-Saves the benchmark parameters
+This function grabs the following variables from the Global Environment:
+\itemize{
+\item REGIONS
+\item LRN_IDS
+\item PREPROC
+\item TUNELENGTH
+\item ITERS
+\item PROB
+\item FINAL
+\item PATH
+\item NU
+\item REPS
+\item INNER
+\item MES
+\item FS
+\item TUNE_FS
+\item FS_NUM
+}
 }
 \keyword{ml-benchmark}

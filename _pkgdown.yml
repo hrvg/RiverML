@@ -15,7 +15,13 @@ reference:
   - title: Machine learning
   - subtitle: Data loading
   - contents:
-    - has_keyword("ml-data-loading")  
+    - has_keyword("ml-data-loading")
+  - subtitle: Data transformation
+  - contents:
+    - has_keyword("ml-data-transformation")
+  - subtitle: Constructing learners
+  - contents:
+    - has_keyword("ml-learners")        
   - subtitle: Benchmark
   - contents:
     - has_keyword("ml-benchmark")  
