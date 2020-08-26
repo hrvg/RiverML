@@ -7,7 +7,7 @@
 get_learners(
   lrn_ids,
   tuneLength = 20,
-  inner = makeResampleDesc("Holdout", stratify = TRUE),
+  inner = mlr::makeResampleDesc("Holdout", stratify = TRUE),
   iters = 5,
   prob = FALSE,
   smote_data,

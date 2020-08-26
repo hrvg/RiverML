@@ -20,8 +20,8 @@ HPC_optim <- function(len, hpc_lim = 1e4, io_time = 20e3, computing_time = 1830,
   yy <- (io_time + computing_time * xx) * (1 + rev.x %/% hpc_lim) * (1 + rev.x %/% avail)
   yy <- yy / (1e3 * 60) # ms -> s -> min
   if (pl){
-    plot(xx, yy, ylab = "Total exec time [min]", xlab = "Task per array [-]", log = "xy", type = "n")
-    lines(xx, yy)
+    graphics::plot(xx, yy, ylab = "Total exec time [min]", xlab = "Task per array [-]", log = "xy", type = "n")
+    graphics::lines(xx, yy)
   }
   df <- data.frame(task_per_array = xx, exec_time_min = yy, n_array = rev.x)
   return(df[which.min(df$exec_time_min), ])

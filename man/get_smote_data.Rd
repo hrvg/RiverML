@@ -7,9 +7,12 @@
 get_smote_data(training_data, seed_preproc)
 }
 \arguments{
-\item{seed_preproc}{\code{numeric} seed for \code{set.seed()} to reproduce results}
+\item{training_data}{a named list with two elements \code{data} and \code{labels}}
 
-\item{data}{a named list with two elements \code{data} and \code{labels}}
+\item{seed_preproc}{\code{numeric} seed for \code{set.seed()} to reproduce results}
+}
+\value{
+a list with two elements \code{data} and \code{labels}
 }
 \description{
 This function is wrapped around \code{resolve_class_imbalance()}.

@@ -21,8 +21,7 @@ This vignette documents the training part of the ML pipeline which performs a be
 # Libraries
 
 ```{r}
-# library(RiverML)
-devtools::load_all()
+library(RiverML)
 ```
 
 # Initialization
@@ -104,8 +103,8 @@ If the benchmark has already been run (with `FINAL <- FALSE`), we can retrieve t
 
 ```
 if (FINAL){
-	bestBMR_tune <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_tune.Rds")
-	bestBMR_lrnH <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_lrnH.Rds")
+	bestBMR_tune <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_tune.Rds", REGIONS, LRN_IDS)
+	bestBMR_lrnH <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_lrnH.Rds", REGIONS, LRN_IDS)
 } 
 ```
 

@@ -6,9 +6,9 @@
 \usage{
 get_learners_internal(
   lrn_ids,
-  data = smote_data,
-  inner_resampling = inner,
-  grid_resolution = tuneLength,
+  data,
+  inner_resampling,
+  grid_resolution,
   .info = FALSE,
   pca = FALSE,
   corr = FALSE,
@@ -28,11 +28,15 @@ get_learners_internal(
 
 \item{.info}{\code{logical}, controls the amount of information printed when tuning}
 
+\item{pca}{\code{logical}, is a PCA performed}
+
 \item{corr}{\code{logical}, are highly correlated predictors removed}
 
-\item{mes}{\code{mlr} list of measure to compute while tuning, the learner are tuning against the first element}
+\item{prob}{\code{logical}, controls the type of output, if \code{TRUE} probabilities, if \code{FALSE} response}
 
-\item{.pca}{\code{logical}, is a PCA performed}
+\item{randomit}{\code{numeric}, the number of iteration for the random discrete tuning}
+
+\item{mes}{\code{mlr} list of measure to compute while tuning, the learner are tuning against the first element}
 }
 \value{
 a list of \code{mlr} learners

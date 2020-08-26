@@ -12,12 +12,12 @@
 #' @param info `logical`, controls the amount of information printed when tuning
 #' @export
 #' @keywords ml-learners
-get_learners <- function(lrn_ids, tuneLength = 20, inner = makeResampleDesc("Holdout", stratify = TRUE), iters = 5, prob = FALSE, smote_data, mes, info){
+get_learners <- function(lrn_ids, tuneLength = 20, inner = mlr::makeResampleDesc("Holdout", stratify = TRUE), iters = 5, prob = FALSE, smote_data, mes, info){
 	if (is.data.frame(smote_data)){
 		smote_data <- list(data = smote_data[, -ncol(smote_data)], labels = smote_data[, ncol(smote_data)])
 	}
 	learners <- c(
-		get_learners_internal(lrn_ids, data = smote_data, inner_resampling = inner, grid_resolution = tuneLength, .info = info, pca = FALSE, corr = FALSE, prob = TRUE, randomit = iters, mes)
+		get_learners_internal(lrn_ids, smote_data, inner, tuneLength, .info = info, pca = FALSE, corr = FALSE, prob = TRUE, randomit = iters, mes)
 		# get_learners_internal(lrn_ids, pca = TRUE, corr = FALSE, inner_resampling = inner, grid_resolution = tuneLength,  prob = prob, randomit = iters),
 		# get_learners_internal(lrn_ids, pca = FALSE, corr = TRUE, inner_resampling = inner, grid_resolution = tuneLength,  prob = prob, randomit = iters),
 		# get_learners_internal(lrn_ids, pca = TRUE, corr = TRUE, inner_resampling = inner, grid_resolution = tuneLength, prob = prob, randomit = iters)
@@ -37,13 +37,15 @@ get_learners <- function(lrn_ids, tuneLength = 20, inner = makeResampleDesc("Hol
 #' @param inner_resampling `resampleDesc` from `mlr`, the inner folds of the nested resampling
 #' @param grid_resolution `numeric`, defines the granularity of the discrete tuning grid
 #' @param .info `logical`, controls the amount of information printed when tuning
-#' @param .pca `logical`, is a PCA performed
+#' @param pca `logical`, is a PCA performed
 #' @param corr `logical`, are highly correlated predictors removed
+#' @param prob `logical`, controls the type of output, if `TRUE` probabilities, if `FALSE` response
+#' @param randomit `numeric`, the number of iteration for the random discrete tuning
 #' @param mes `mlr` list of measure to compute while tuning, the learner are tuning against the first element
 #' @return a list of `mlr` learners
 #' @export 
 #' @keywords ml-learners
-get_learners_internal <- function(lrn_ids, data = smote_data, inner_resampling = inner, grid_resolution = tuneLength, .info = FALSE, pca = FALSE, corr = FALSE, prob = TRUE, randomit = 100, mes){
+get_learners_internal <- function(lrn_ids, data, inner_resampling, grid_resolution, .info = FALSE, pca = FALSE, corr = FALSE, prob = TRUE, randomit = 100, mes){
 	learners <- lapply(lrn_ids, function(lrn.id){
 		lrn <- mlr::makeLearner(lrn.id, predict.type = ifelse(prob, "prob", "response"))
 		lrn <- mlr::makePreprocWrapperCaret(lrn, ppc.pca = pca, ppc.corr = corr)
@@ -251,26 +253,27 @@ get_ps <- function(lrn.id, data, grid_resolution){
 #' @param wrapped_learners `TuneWrapper` obtained with `get_learners()`
 #' @param PATH `file.path` to the benchmark results
 #' @param region `character` identifying the region of study and the `mlr` task
+#' @param bestBMR_tune `data.frame`, results from the benchmark
 #' @return a `mlr` learner with most frequently tuned hyper-parameters
 #' @export
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
+#' @importFrom rlang .data
 #' @keywords ml-learners
-get_final_learners <- function(wrapped_learners, PATH, region){
+get_final_learners <- function(wrapped_learners, PATH, region, bestBMR_tune){
 	par_names <- unlist(lapply(wrapped_learners, function(wrapped_learner) names(wrapped_learner$opt.pars$pars)))
 	tune <- bestBMR_tune %>% 
-		dplyr::filter(task.id == region) %>%
+		dplyr::filter(.data$task.id == region) %>%
 		reshape2::melt(measure.vars = par_names) %>%
-		dplyr::group_by(task.id, learner.id, variable) %>%
-		dplyr::summarize(
-		mfv = min(modeest::mfv(value))) %>%
+		dplyr::group_by(.data$task.id, .data$learner.id, .data$variable) %>%
+		dplyr::summarize(mfv = min(modeest::mfv(.data$value))) %>%
 		na.omit() %>%
 		dplyr::ungroup()
 	learners <- lapply(wrapped_learners, function(wrapped_learner){
 		lrn.id <- paste(wrapped_learner$type, wrapped_learner$id, sep = ".")	
 		lrn <- mlr::makeLearner(lrn.id, predict.type = wrapped_learner$predict.type)
-		ps <- as.list(tune %>% dplyr::filter(learner.id == lrn.id) %>% dplyr::pull(mfv))
-		names(ps) <- tune %>% dplyr::filter(learner.id == lrn.id) %>% dplyr::pull(variable)
+		ps <- as.list(tune %>% dplyr::filter(.data$learner.id == lrn.id) %>% dplyr::pull(.data$mfv))
+		names(ps) <- tune %>% dplyr::filter(.data$learner.id == lrn.id) %>% dplyr::pull(.data$variable)
 		PS <- mlr::getParamSet(lrn)$pars
 		for (i in seq_along(ps)){
 			psType <- PS[[names(ps)[i]]]$type

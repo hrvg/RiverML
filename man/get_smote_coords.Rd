@@ -15,6 +15,9 @@ get_smote_coords(coords, labels, smote_data, seed_preproc)
 
 \item{seed_preproc}{\code{numeric} seed for \code{set.seed()} to reproduce results}
 }
+\value{
+a list with two elements \code{data} and \code{labels}
+}
 \description{
 Produces noisy coordinates for SMOTE data
 }

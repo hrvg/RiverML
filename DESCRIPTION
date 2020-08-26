@@ -28,22 +28,24 @@ Imports:
   maptools,
   methods,
   mlr,
+  modeest,
   parallel,
   parallelMap,
   progress,
   R.utils,
   raster,
+  reshape2,
   rgdal,
   rgeos,
   sf,
   sp,
   spacetime,
   terra,
+  tictoc,
   UBL,
   stringr
 Suggests: 
     testthat,
-    knitr,
     rmarkdown,
     pkgdown
 VignetteBuilder: knitr

@@ -4,12 +4,16 @@
 \alias{get_bestBMR_tuning_results}
 \title{Retrieve the value of the benchmark tuning results}
 \usage{
-get_bestBMR_tuning_results(fpath, fname)
+get_bestBMR_tuning_results(fpath, fname, REGIONS, LRN_IDS)
 }
 \arguments{
 \item{fpath}{a \code{character} or a \code{file.path} pointing to a directory containing the result files}
 
 \item{fname}{\code{character}, one of "bestBMR_tune.Rds" or "bestBMR_lrnH.Rds"}
+
+\item{REGIONS}{\code{character}, vector of \code{region} identifiers (e.g. \code{"SFE"})}
+
+\item{LRN_IDS}{\code{character}, vector of learner identifiers (e.g. \code{"classif.randomForest"})}
 }
 \value{
 the benchmark tuning results as a \code{data.frame}

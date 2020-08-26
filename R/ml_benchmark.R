@@ -32,15 +32,15 @@ get_outers <- function(nu = 5, reps =10, labels, tasks){
 	# min_rep <- max(2, nu %% min(min(table(labels)), 5))
 	# min_fold <- min(5, min(table(labels)))
 	if (reps >= 2){
-		outer <- makeResampleDesc("RepCV", rep = reps, folds = nu, stratify = TRUE)
-		outer_spcv <- makeResampleDesc("SpRepCV", rep = reps, folds = nu,)
-		outer_smote <- makeResampleDesc("RepCV", rep = reps, folds = nu, stratify = TRUE)
-		outer_smote_spcv <- makeResampleDesc("SpRepCV", rep = reps, folds = nu)
+		outer <- mlr::makeResampleDesc("RepCV", rep = reps, folds = nu, stratify = TRUE)
+		outer_spcv <- mlr::makeResampleDesc("SpRepCV", rep = reps, folds = nu,)
+		outer_smote <- mlr::makeResampleDesc("RepCV", rep = reps, folds = nu, stratify = TRUE)
+		outer_smote_spcv <- mlr::makeResampleDesc("SpRepCV", rep = reps, folds = nu)
 	} else {
-		outer <- makeResampleDesc("CV", iters = nu, stratify = TRUE)
-		outer_spcv <- makeResampleDesc("SpCV", iters = nu,)
-		outer_smote <- makeResampleDesc("CV", iters = nu, stratify = TRUE)
-		outer_smote_spcv <- makeResampleDesc("SpCV", iters = nu)
+		outer <- mlr::makeResampleDesc("CV", iters = nu, stratify = TRUE)
+		outer_spcv <- mlr::makeResampleDesc("SpCV", iters = nu,)
+		outer_smote <- mlr::makeResampleDesc("CV", iters = nu, stratify = TRUE)
+		outer_smote_spcv <- mlr::makeResampleDesc("SpCV", iters = nu)
 	}
 	outers <- lapply(tasks, function(task){
 		if(grepl("SMOTE", task$task.desc$id)){
@@ -64,18 +64,21 @@ get_outers <- function(nu = 5, reps =10, labels, tasks){
 #' Retrieve the value of the benchmark tuning results
 #' @param fpath a `character` or a `file.path` pointing to a directory containing the result files
 #' @param fname `character`, one of "bestBMR_tune.Rds" or "bestBMR_lrnH.Rds"
+#' @param REGIONS `character`, vector of `region` identifiers (e.g. `"SFE"`)                               
+#' @param LRN_IDS `character`, vector of learner identifiers (e.g. `"classif.randomForest"`)               
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @return the benchmark tuning results as a `data.frame`
 #' @export
 #' @keywords ml-benchmark
-get_bestBMR_tuning_results <- function(fpath, fname){
+get_bestBMR_tuning_results <- function(fpath, fname, REGIONS, LRN_IDS){
 	if(!fname %in% c("bestBMR_tune.Rds", "bestBMR_lrnH.Rds")) stop(paste("Invalid", fname))
 	if (!file.exists(file.path(fpath, fname))) stop(paste(fname, "not found in", fpath))
 	bestBMR_tuning_results <- readRDS(file.path(fpath, fname)) %>%
-		dplyr::mutate(task.id = gsub("SAC", "ALLSAC", task.id),
-			learner.id = paste0("classif.", learner.id)) %>%
-	dplyr::filter(learner.id %in% LRN_IDS) %>% 
-	dplyr::filter(task.id %in% REGIONS)
+		dplyr::mutate(.data$task.id = gsub("SAC", "ALLSAC", .data$task.id),
+			learner.id = paste0("classif.", .data$learner.id)) %>%
+	dplyr::filter(.data$learner.id %in% LRN_IDS) %>% 
+	dplyr::filter(.data$task.id %in% REGIONS)
 	return(bestBMR_tuning_results )	
 }
 
@@ -104,6 +107,7 @@ get_bestBMR_tuning_results <- function(fpath, fname){
 #' @export
 #' @keywords ml-benchmark
 savePARAMETERS <- function(PATH, FINAL){
+	REGIONS <- LRN_IDS <- PREPROC <- TUNELENGTH <- ITERS <- PROB <- FINAL <- PATH <- NU <- REPS <- INNER <- MES <- FS <- TUNE_FS <- FS_NUM <- NULL
 	saveRDS(
 		list(
 			REGIONS = REGIONS, 
@@ -149,7 +153,7 @@ compute_benchmark <- function(learners, tasks, outers, prob, mes){
 			localH2o <- h2o::h2o.init(nthreads = 8, min_mem_size='10G', max_mem_size = "20G")
 			h2o::h2o.removeAll() ## clean slate - just in case the cluster was already running
 			h2o::h2o.no_progress()
-			bmr <- benchmark(learners[[i]], tasks, outers, measures = mes, models = TRUE, keep.extract = TRUE)
+			bmr <- mlr::benchmark(learners[[i]], tasks, outers, measures = mes, models = TRUE, keep.extract = TRUE)
 			h2o::h2o.shutdown(prompt = FALSE)
 		} else {
 			parallelStartSocket(8, level = "mlr.resample", load.balancing = TRUE)
@@ -171,11 +175,12 @@ compute_benchmark <- function(learners, tasks, outers, prob, mes){
 #' @param tasks a list of `mlr` tasks
 #' @param prob `logical`, controls the type of output, if `TRUE` probabilities, if `FALSE` response
 #' @param mes `mlr` list of measure to compute while tuning, the learner are tuning against the first element
+#' @param LRN_IDS `character`, vector of learner identifiers (e.g. `"classif.randomForest"`)              
 #' @return a list of model to predict with
 #' @import progress
 #' @export
 #' @keywords ml-benchmark
-compute_final_model <- function(learners, tasks, prob, mes){
+compute_final_model <- function(learners, tasks, prob, mes, LRN_IDS){
 	mods <- list()
 	pb <- progress_bar$new(format = "[:bar] :current/:total - :percent in :elapsed/:eta \n", total = length(learners), show_after = 0)
 	invisible(pb$tick(0))
@@ -208,47 +213,50 @@ compute_final_model <- function(learners, tasks, prob, mes){
 #' 1. _Learners_. Learners are constructed using `get_learners()` or `get_final_learners()`.
 #' 1. _Compute benchmark_. The benchmark is run with `compute_final_model()` or `compute_benchmark()` (which needs to retrieve the outer #' folds of the nested resampling with `get_outers()`).
 #' 
-#' @param REGIONS `character`, vector of `region` identifiers (e.g. `"SFE"`)                               
+#' @param regions `character`, vector of `region` identifiers (e.g. `"SFE"`)                               
 #' @param LRN_IDS `character`, vector of learner identifiers (e.g. `"classif.randomForest"`)               
 #' @param TUNELENGTH `numeric`, controls the number of hyper-parameters for discrete tuning                 
 #' @param INNER `ResampleDesc`,  the inner folds for the nested resampling                           
 #' @param ITERS `numeric`, controls the number of tries for the random tuning                          
 #' @param PROB `logical`, selects the type of output, if `TRUE` probabilities, if `FALSE` response    
-#' @param NU `numeric`, number of folds for the $\nu$-fold cross-validation                         
-#' @param REPS `numeric`, number of repetitions for the repeated $\nu$-fold cross-validation          
+#' @param NU `numeric`, number of folds for the \eqn{\nu}-fold cross-validation                         
+#' @param REPS `numeric`, number of repetitions for the repeated \eqn{\nu}-fold cross-validation          
 #' @param PREPROC `character`, vector of preprocessing identifiers (e.g. `"scale"`)                        
 #' @param FINAL `logical`, selects the type of runs, if `FALSE` trains, else predict
+#' @param PATH `character` or `file.path`, path to the output directory 
 #' @param REDUCED `logical`, legacy option                 
 #' @param MES `list`, list of measures from the `mlr` package, the first one is optimized against 
 #' @param INFO `logical`, controls the information printed by the training process                    
 #' @param FS `logical`, if `TRUE` activates the feature selection                                   
-#' @param FS_NUM `numeric`, number of features to select if `FS` is `TRUE`                              
+#' @param FS_NUM `numeric`, number of features to select if `FS` is `TRUE`         
+#' @importFrom magrittr %>%                     
+#' @importFrom rlang .data
 #' @export
 #' @return a list of `mlr` benchmark results
 regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "SCC", "SC", "SJT"), LRN_IDS, TUNELENGTH, INNER, ITERS, PROB, NU, REPS, PREPROC, FINAL, PATH, REDUCED, MES, INFO, FS, FS_NUM){
-	bmrs <- lapply(regions, function(hydro_class){
+	bmrs <- lapply(regions, function(region){
 		### SKIP ###
 		if (FINAL){
 			.FS_NUM <- FS_NUM # avoiding name conflict
-			.REGIONS <- bestBMR_lrnH %>% filter(FS_NUM == .FS_NUM) %>% pull(task.id)
+			.REGIONS <- bestBMR_lrnH %>% dplyr::filter(FS_NUM == .FS_NUM) %>% dplyr::pull(.data$task.id)
 			# LRN_IDS <- bestBMR_lrnH %>% filter(FS_NUM == .FS_NUM) %>% pull(learner.id)
-			if (!hydro_class %in% .REGIONS){
+			if (!region %in% .REGIONS){
 				return(NA)
 			}
 		}
 
 		### DATA LOADING ### 
-		results <- load_features(hydro_class)
+		results <- get_training_data(region)
 		data_df <- results$data_df
 		groups <- results$groups	
 
 		### DATA FORMATING ###
-		labels <- fmt_labels(groups, hydro_class)
-		raw_training_data <- get_raw_training_data(data_df)
-		coords <- get_coords(hydro_class)
+		labels <- fmt_labels(groups, region)
+		raw_training_data <- sanitize_data(data_df)
+		coords <- get_coords(region)
 
-		target_data <- get_target_data(hydro_class)
-		raw_target_data <- get_raw_target_data(target_data)
+		target_data <- get_target_data(region)
+		raw_target_data <- sanitize_data(target_data)
 		colnames(raw_training_data) <- colnames(raw_target_data)
 
 		### FEATURE SELECTION ###
@@ -257,12 +265,12 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 			if (!FINAL){
 				seed_preproc <- 720
 				ppc <- get_ppc(raw_training_data, seed_preproc, c("nzv", PREPROC)) # adding nzv to avoid zero cov
-				training_data <- preproc_training_data(raw_training_data, ppc, labels) #  list of 2
+				training_data <- preproc_data(raw_training_data, ppc, labels) #  list of 2
 				
 				namesICI <- c("CHYD", "CCHEM", "CSED", "CCONN", "CTEMP", "CHABT", "ICI", "WHYD", "WCHEM", "WSED", "WCONN", "WTEMP", "WHABT", "IWI")
 				ind <- which(!colnames(training_data$data) %in% namesICI)
 				training_data$data <- training_data$data[, ind]
-				df2 <- cor(training_data$data)
+				df2 <- stats::cor(training_data$data)
 				hc <- caret::findCorrelation(df2, cutoff = 0.95) # putt any value as a "cutoff" 
 				hc <- sort(hc)
 				droppedFeatures <- colnames(training_data$data)[hc]
@@ -272,22 +280,22 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 				
 				tictoc::tic()
 				seed_preproc <- 720
-				resampleDesc <- makeResampleDesc("Subsample", stratify = TRUE, iters = 500, split = 0.8)
-				task <- makeClassifTask(data = make_training_data(training_data), target = "channel_type", coord = coords, id = paste(hydro_class, "FS"))
-				rs <- makeResampleInstance(resampleDesc, task)$train.inds
+				resampleDesc <- mlr::makeResampleDesc("Subsample", stratify = TRUE, iters = 500, split = 0.8)
+				task <- mlr::makeClassifTask(data = make_training_data(training_data), target = "channel_type", coord = coords, id = paste(region, "FS"))
+				rs <- mlr::makeResampleInstance(resampleDesc, task)$train.inds
 				selectedFeatures <- lapply(rs, function(ind){
-					resampled_task <- makeClassifTask(data = make_training_data(training_data)[ind, ], target = "channel_type", coord = coords[ind, ], id = paste(hydro_class, "FS"))
-					FS_task <- filterFeatures(resampled_task, method = "FSelectorRcpp_information.gain", abs = FS_NUM)
-					head(colnames(FS_task$env$data), -1)
+					resampled_task <- mlr::makeClassifTask(data = make_training_data(training_data)[ind, ], target = "channel_type", coord = coords[ind, ], id = paste(region, "FS"))
+					FS_task <- mlr::filterFeatures(resampled_task, method = "FSelectorRcpp_information.gain", abs = FS_NUM)
+					utils::head(colnames(FS_task$env$data), -1)
 				})
 				selectedFeatures <- names(sort(table(unlist(selectedFeatures)), decreasing = TRUE))
-				selectedFeatures <- head(selectedFeatures, FS_NUM)
+				selectedFeatures <- utils::head(selectedFeatures, FS_NUM)
 				tictoc::toc()
-				saveRDS(selectedFeatures, file.path(PATH, paste0(hydro_class, "_selectedFeatures.Rds")))
+				saveRDS(selectedFeatures, file.path(PATH, paste0(region, "_selectedFeatures.Rds")))
 			} else {
 				selectedFeatures <- bestBMR_lrnH %>% 
-				filter(task.id == hydro_class, FS_NUM == .FS_NUM) %>% 
-				pull(features) %>% 
+				dplyr::filter(.data$task.id == region, .data$FS_NUM == .FS_NUM) %>% 
+				dplyr::pull(.data$features) %>% 
 				strsplit(" ") %>% 
 				unlist()
 			}
@@ -301,7 +309,7 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 		seed_preproc <- 720
 		ppc <- get_ppc(raw_target_data, seed_preproc, PREPROC)
 		colnames(raw_training_data) <- colnames(raw_target_data)
-		training_data <- preproc_training_data(raw_training_data, ppc, labels)
+		training_data <- preproc_data(raw_training_data, ppc, labels)
 
 		### SMOTE ###
 		smote_data <- get_smote_data(training_data, seed_preproc)
@@ -310,11 +318,11 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 		### TASKS ###
 		if (FS){
 			tasks <- list(
-				task_smote_no_StreamCat =  makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = TRUE), 		target = "channel_type", coord = smote_coords, id = paste(hydro_class, "SMOTE"))
+				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = TRUE), 		target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE"))
 			)
 		} else {
 			tasks <- list(
-				task_smote_no_StreamCat =  makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = FALSE), 		target = "channel_type", coord = smote_coords, id = paste(hydro_class, "SMOTE", "no StreamCAT"))
+				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = FALSE), 		target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE", "no StreamCAT"))
 			)
 		}
 		print(tasks)
@@ -329,11 +337,11 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 			### COMPUTE FINAL MODEL###
 			# cwd_bak <- getwd()
 			# setwd("F:/hguillon/research")
-			learners <- get_final_learners(learners, PATH, hydro_class)
+			learners <- get_final_learners(learners, PATH, region, bestBMR_tune)
 			print(learners)
-			mods <- compute_final_model(learners, tasks, prob = PROB, mes = MES)
+			mods <- compute_final_model(learners, tasks, prob = PROB, mes = MES, LRN_IDS)
 			l <- list(mods = mods, ppc = ppc, training_data = training_data)
-			saveRDS(l, file.path(PATH, paste0(hydro_class, "_final.Rds")))
+			saveRDS(l, file.path(PATH, paste0(region, "_final.Rds")))
 			# setwd(cwd_bak)
 			return(l)
 		} else {
@@ -344,7 +352,7 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 			# cwd_bak <- getwd()
 			# setwd("F:/hguillon/research")
 			bmr <- compute_benchmark(learners, tasks, outers, prob = PROB, mes = MES)
-			saveRDS(bmr, file.path(PATH, paste0(hydro_class, "_benchmark.Rds")))
+			saveRDS(bmr, file.path(PATH, paste0(region, "_benchmark.Rds")))
 			# setwd(cwd_bak)
 			return(bmr)
 		}

@@ -4,12 +4,7 @@
 \alias{resolve_class_imbalance}
 \title{Resolve class imbalances using \code{UBL} package}
 \usage{
-resolve_class_imbalance(
-  data = training.data,
-  labels = training.labels,
-  type = model_df[i, ]$Imba_type,
-  .pert = 0.1
-)
+resolve_class_imbalance(data, labels, type = "Smote", .pert = 0.1)
 }
 \arguments{
 \item{data}{a \code{data.frame}}

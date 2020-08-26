@@ -4,7 +4,7 @@
 \alias{get_final_learners}
 \title{Get the final learners from the benchmark tuning results}
 \usage{
-get_final_learners(wrapped_learners, PATH, region)
+get_final_learners(wrapped_learners, PATH, region, bestBMR_tune)
 }
 \arguments{
 \item{wrapped_learners}{\code{TuneWrapper} obtained with \code{get_learners()}}
@@ -12,6 +12,8 @@ get_final_learners(wrapped_learners, PATH, region)
 \item{PATH}{\code{file.path} to the benchmark results}
 
 \item{region}{\code{character} identifying the region of study and the \code{mlr} task}
+
+\item{bestBMR_tune}{\code{data.frame}, results from the benchmark}
 }
 \value{
 a \code{mlr} learner with most frequently tuned hyper-parameters

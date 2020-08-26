@@ -4,7 +4,7 @@
 #' @param extdir default to `NULL`, if not `NULL` this indicates a `file.path` or `character` pointing to a directory external to the package. This function expects to find shapefiles named `region_200m_VAA_LDD.shp` in `extdir`.
 #' @return a SpatialLinesDataFrame
 #' @importFrom methods as
-#' @import raster
+#' @import sp
 #' @export
 #' @keywords geospatial-data
 get_target_streamlines <- function(region, extdir = NULL){
@@ -81,13 +81,14 @@ get_pol <- function(i, pts, dl = 1000, .crs = sp::CRS("+proj=longlat +datum=WGS8
 #' @importFrom utils read.csv
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
+#' @importFrom rlang .data
 #' @export
 #' @keywords geospatial-data
 get_input_data <- function(fpath){
 	if(!file.exists(fpath)) stop("Input file does not exist.")
 	input_data <- read.csv(fpath, header=TRUE, sep = ",")
 	if(!all(c("Name", "long", "lat") %in% colnames(input_data))) stop("Input data has the wrong format.")
-	input_data <- na.omit(input_data) %>% dplyr::arrange(Name)
+	input_data <- na.omit(input_data) %>% dplyr::arrange(.data$Name)
 	return(input_data)
 }
 

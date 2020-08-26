@@ -25,7 +25,7 @@ raster_stats <- function(i, .ls, .lines, .stat){
 #' @keywords tam-dm
 near_channel_stats <- function(i, .ls, .lines, .stat, bf = 100){
 	.s <- .ls[[i]]
-	spext <- as(extent(.s), "SpatialPolygons")
+	spext <- as(raster::extent(.s), "SpatialPolygons")
 	proj4string(spext) <- sp::CRS(proj4string(.lines))
 	if(!is.null(rgeos::gIntersection(.lines, spext))){
 		.line <- raster::crop(.lines[sp::SpatialLinesLengths(.lines) > 1E-6, ], .s)
@@ -85,6 +85,6 @@ get_terrain_metrics <- function(polys, DEM, curvature = FALSE){
 			lr <- lapply(seq(nl), function(j) br[[j]])
 			return(lr)
 		})
-	ls <- lapply(llr, stack)
+	ls <- lapply(llr, raster::stack)
 	return(ls)
 }

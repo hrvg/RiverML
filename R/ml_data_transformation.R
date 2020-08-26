@@ -27,14 +27,14 @@ preproc_data <- function(raw_training_data, ppc, labels){
 #' 
 #' This function is wrapped around `resolve_class_imbalance()`.
 #' 
-#' @param data a named list with two elements `data` and `labels`
+#' @param training_data a named list with two elements `data` and `labels`
 #' @param seed_preproc `numeric` seed for `set.seed()` to reproduce results
 #' @return a list with two elements `data` and `labels`
 #' @export
 #' @keywords ml-data-transformation
 get_smote_data <- function(training_data, seed_preproc){
 	set.seed(seed_preproc)
-	suppressMessages(smote_data <- resolve_class_imbalance(data = training_data$data, labels = training_data$labels, type = "Smote"))
+	suppressMessages(smote_data <- resolve_class_imbalance(training_data$data, training_data$labels, type = "Smote"))
 	return(smote_data)
 }
 
@@ -51,7 +51,7 @@ get_smote_data <- function(training_data, seed_preproc){
 #' 
 get_smote_coords <- function(coords, labels, smote_data, seed_preproc){
 	set.seed(seed_preproc)
-	suppressMessages(smote_coords <- resolve_class_imbalance(data = coords, labels = labels, type = "GaussianNoise"))
+	suppressMessages(smote_coords <- resolve_class_imbalance(coords, labels, type = "GaussianNoise"))
 	smote_coords <- smote_coords$data
 	smote_coords <- smote_coords[match(row.names(smote_coords), row.names(smote_data$data)), ]
 	return(smote_coords)
@@ -67,7 +67,7 @@ get_smote_coords <- function(coords, labels, smote_data, seed_preproc){
 #' @param .pert `numeric`, perturbation in the Gaussian noise
 #' @export
 #' @keywords ml-data-transformation
-resolve_class_imbalance <- function(data = training.data, labels = training.labels, type = model_df[i, ]$Imba_type, .pert = .1){
+resolve_class_imbalance <- function(data, labels, type = "Smote", .pert = .1){
 	# data = training.data
 	#  labels = training.labels
 	#  type = model_df[i, ]$Imba_type
@@ -89,9 +89,6 @@ resolve_class_imbalance <- function(data = training.data, labels = training.labe
 		})
 		upsampled.data <- do.call(rbind, jittered.data)
 	} else if (type == "Smote"){
-		unloadNamespace("raster")
-		library(gstat)
-		library(UBL)
 		smote.data <- cbind(data.frame(labels = labels), data)
 		t <- as.data.frame(max(table(labels)) / table(labels))
 		perc_list <- split(t[, 2], t[, 1])
@@ -100,17 +97,9 @@ resolve_class_imbalance <- function(data = training.data, labels = training.labe
 			k = min(c(ifelse(min(table(labels)) > 1, min(table(labels))-1, 1), 5)),
 			repl = FALSE,
 			dist = "Euclidean")
-		unloadNamespace("UBL")
-		unloadNamespace("automap")
-		unloadNamespace("gstat")
-		unloadNamespace("spacetime")
-		library(raster)
 		upsampled.labels <- smoteTrain$labels
 		upsampled.data <- smoteTrain[, (2:ncol(smoteTrain))]
 	} else if (type == "GaussianNoise") {
-		unloadNamespace("raster")
-		library(gstat)
-		library(UBL)
 		smote.data <- cbind(data.frame(labels = labels), data)
 		t <- as.data.frame(max(table(labels)) / table(labels))
 		perc_list <- split(t[, 2], t[, 1])
@@ -120,15 +109,7 @@ resolve_class_imbalance <- function(data = training.data, labels = training.labe
 			repl = FALSE)
 		upsampled.labels <- noiseTrain$labels
 		upsampled.data <- noiseTrain[, (2:ncol(noiseTrain))]
-		unloadNamespace("UBL")
-		unloadNamespace("automap")
-		unloadNamespace("gstat")
-		unloadNamespace("spacetime")
-		library(raster)
 	} else if (type == "Under") {
-		unloadNamespace("raster")
-		library(gstat)
-		library(UBL)
 		smote.data <- cbind(data.frame(labels = labels), data)
 		# t <- as.data.frame(max(table(labels)) / table(labels))
 		# perc_list <- split(t[, 2], t[, 1])
@@ -137,15 +118,7 @@ resolve_class_imbalance <- function(data = training.data, labels = training.labe
 			repl = FALSE)
 		upsampled.labels <- noiseTrain$labels
 		upsampled.data <- noiseTrain[, (2:ncol(noiseTrain))]
-		unloadNamespace("UBL")
-		unloadNamespace("automap")
-		unloadNamespace("gstat")
-		unloadNamespace("spacetime")
-		library(raster)
 	} else if (type == "GaussianExtreme") {
-		unloadNamespace("raster")
-		library(gstat)
-		library(UBL)
 		smote.data <- cbind(data.frame(labels = labels), data)
 		noiseTrain <- UBL::GaussNoiseClassif(labels ~ ., smote.data, 
 			C.perc = "extreme",
@@ -153,11 +126,6 @@ resolve_class_imbalance <- function(data = training.data, labels = training.labe
 			repl = FALSE)
 		upsampled.labels <- noiseTrain$labels
 		upsampled.data <- noiseTrain[, (2:ncol(noiseTrain))]
-		unloadNamespace("UBL")
-		unloadNamespace("automap")
-		unloadNamespace("gstat")
-		unloadNamespace("spacetime")
-		library(raster)
 	}
 	return(list(data = upsampled.data, labels = upsampled.labels))
 }
