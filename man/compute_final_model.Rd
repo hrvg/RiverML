@@ -4,7 +4,7 @@
 \alias{compute_final_model}
 \title{Compute the final models in sequential mode}
 \usage{
-compute_final_model(learners, tasks, prob, mes, lrn_ids = LRN_IDS)
+compute_final_model(learners, tasks, prob, mes, LRN_IDS)
 }
 \arguments{
 \item{learners}{a list of \code{mlr} learners}
@@ -15,7 +15,7 @@ compute_final_model(learners, tasks, prob, mes, lrn_ids = LRN_IDS)
 
 \item{mes}{\code{mlr} list of measure to compute while tuning, the learner are tuning against the first element}
 
-\item{lrn_ids}{\code{character}, vector of learner identifiers (e.g. \code{"classif.randomForest"})}
+\item{LRN_IDS}{\code{character}, vector of learner identifiers (e.g. \code{"classif.randomForest"})}
 }
 \value{
 a list of model to predict with

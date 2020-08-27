@@ -37,13 +37,14 @@ Imports:
   reshape2,
   rgdal,
   rgeos,
+  rlang,
   sf,
   sp,
   spacetime,
+  stringr,
   terra,
   tictoc,
   UBL,
-  stringr
 Suggests: 
     testthat,
     rmarkdown,

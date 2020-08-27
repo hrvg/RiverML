@@ -36,9 +36,9 @@ regional_benchmark(
 
 \item{PROB}{\code{logical}, selects the type of output, if \code{TRUE} probabilities, if \code{FALSE} response}
 
-\item{NU}{\code{numeric}, number of folds for the $\nu$-fold cross-validation}
+\item{NU}{\code{numeric}, number of folds for the \eqn{\nu}-fold cross-validation}
 
-\item{REPS}{\code{numeric}, number of repetitions for the repeated $\nu$-fold cross-validation}
+\item{REPS}{\code{numeric}, number of repetitions for the repeated \eqn{\nu}-fold cross-validation}
 
 \item{PREPROC}{\code{character}, vector of preprocessing identifiers (e.g. \code{"scale"})}
 

@@ -24,6 +24,25 @@ get_training_data <- function(region, extdir = NULL){
 		)
 }
 
+#' Load target features
+#' @param region `character`, identifier of the region of study
+#' @param extdir `character` or `file.path`, a directory in which to fetch the `groups` and `data_df` `csv` files
+#' @return `data_df` the target data `data.frame`
+#' @export
+#' @keywords ml-data-loading
+get_target_data <- function(region, extdir = NULL){
+	if(is.null(extdir)){
+		data_df_file <- system.file("extdata/input_data/", paste0(region, "_all_data_df.csv"), package = "RiverML")
+		if(!file.exists(data_df_file)) stop("Region not provided with package")
+	} else {
+		data_df_file <- file.path(extdir, paste0(region, "_all_data_df.csv"))
+		if(!file.exists(data_df_file)) stop("`all_data_df_file` not found in `extdir`")
+	}
+	data_df <- read.csv(file = data_df_file)
+	return(data_df)
+}
+
+
 #' Format the class labels
 #' @param groups the class groups
 #' @param region `character`, identifier of the region of study
@@ -63,4 +82,13 @@ get_coords <- function(region){
 	.coords <- coordinates(points)
 	coords <- data.frame(x = .coords[, 1], y = .coords[, 2])
 	return(coords)
+}
+
+#' Transform training data from `list` to `data.frame`
+#' @param smote_data  a named list with two elements `data` and `labels`
+#' @return a `data.frame` with an additional column `channel_type`
+#' @export
+make_training_data <- function(smote_data){
+	training_data <- cbind(smote_data$data, channel_type = smote_data$labels)
+	return(training_data)
 }

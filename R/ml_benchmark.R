@@ -75,7 +75,7 @@ get_bestBMR_tuning_results <- function(fpath, fname, REGIONS, LRN_IDS){
 	if(!fname %in% c("bestBMR_tune.Rds", "bestBMR_lrnH.Rds")) stop(paste("Invalid", fname))
 	if (!file.exists(file.path(fpath, fname))) stop(paste(fname, "not found in", fpath))
 	bestBMR_tuning_results <- readRDS(file.path(fpath, fname)) %>%
-		dplyr::mutate(.data$task.id = gsub("SAC", "ALLSAC", .data$task.id),
+		dplyr::mutate(task.id = gsub("SAC", "ALLSAC", .data$task.id),
 			learner.id = paste0("classif.", .data$learner.id)) %>%
 	dplyr::filter(.data$learner.id %in% LRN_IDS) %>% 
 	dplyr::filter(.data$task.id %in% REGIONS)
@@ -318,11 +318,11 @@ regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "S
 		### TASKS ###
 		if (FS){
 			tasks <- list(
-				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = TRUE), 		target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE"))
+				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data(smote_data), target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE"))
 			)
 		} else {
 			tasks <- list(
-				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data_legacy(smote_data, data_df, StreamCat = FALSE), 		target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE", "no StreamCAT"))
+				task_smote_no_StreamCat =  mlr::makeClassifTask(data = make_training_data(smote_data), target = "channel_type", coord = smote_coords, id = paste(region, "SMOTE", "no StreamCAT"))
 			)
 		}
 		print(tasks)
