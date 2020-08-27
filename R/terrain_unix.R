@@ -1,16 +1,23 @@
-# Author: Robert J. Hijmans
-
-# Date : February 2011
-
-# Version 1.0
-
-# Licence GPL v3
-
-# Modified by Herve Guillon, November 2017
-# Added options for computation of planform and profile curvature
-
-# dyn.load("R/terrain_unix.so")
+#' Modified `terrain()` function
+#' 
+#' This modified version of `raster::terrain()` can compute curvature. See details.
+#' 
+#' Author: Robert J. Hijmans
+#' Date : February 2011
+#' Version 1.0
+#' Licence GPL v3
+#' Modified by Herve Guillon, November 2017
+#' Added options for computation of planform and profile curvature
+#' @param x raster
+#' @param opt type of metrics
+#' @param unit radians or tangent
+#' @param neighbors default to queen case
+#' @param filename passed to WriteRaster
+#' @return a raster with the computed metrics
+#' @importFrom raster blockSize brick canProcessInMemory couldBeLonLat getValues hasValues isLonLat nlayers pbClose pbCreate pbStep pointDistance projection raster res setValues trim values writeRaster writeStart writeStop writeValues yFromRow
 #' @useDynLib RiverML _do_terrain_
+#' @export
+#' @keywords tam-dm
 terrain_ <- function(x, opt='slope', unit='radians', neighbors=8, filename='', ...) {
 
 	
