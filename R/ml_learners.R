@@ -99,71 +99,71 @@ get_learners_internal <- function(lrn_ids, data, inner_resampling, grid_resoluti
 get_ps <- function(lrn.id, data, grid_resolution){
 	if (lrn.id == "classif.svm"){
 		par_range <- caret::getModelInfo("svmLinear")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("cost", values = par_range$tau),
-		  	mlr::makeDiscreteParam("kernel", values = c("linear"))
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("cost", values = par_range$tau),
+		  	ParamHelpers::makeDiscreteParam("kernel", values = c("linear"))
 		)
 	} else if (lrn.id == "classif.randomForest"){
 		par_range <- caret::getModelInfo("rf")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("mtry", values = par_range$mtry)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("mtry", values = par_range$mtry)		
 		)
 	} else if (lrn.id == "classif.plsdaCaret"){
 		par_range <- caret::getModelInfo("kernelpls")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("ncomp", values = par_range$ncomp)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("ncomp", values = par_range$ncomp)		
 		)
 	} else if (lrn.id == "classif.ksvm"){
 		par_range <- caret::getModelInfo("svmRadial")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("C", values = unique(par_range$tau)),
-		  	mlr::makeDiscreteParam("sigma", values = unique(par_range$sigma))			 
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("C", values = unique(par_range$tau)),
+		  	ParamHelpers::makeDiscreteParam("sigma", values = unique(par_range$sigma))			 
 		)
 	} else if (lrn.id == "classif.earth"){
 		par_range <- caret::getModelInfo("earth")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("nprune", values = unique(par_range$nprune)),
-		  	mlr::makeDiscreteParam("degree", values = unique(par_range$degree))		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("nprune", values = unique(par_range$nprune)),
+		  	ParamHelpers::makeDiscreteParam("degree", values = unique(par_range$degree))		
 		)
 	} else if (lrn.id == "classif.IBk"){
 		par_range <- caret::getModelInfo("knn")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("K", values = par_range$kmax)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("K", values = par_range$kmax)		
 		)
 	} else if (lrn.id == "classif.fnn"){
 		par_range <- caret::getModelInfo("knn")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("k", values = par_range$kmax)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("k", values = par_range$kmax)		
 		)	
 	} else if (lrn.id == "classif.rpart"){
 		par_range <- caret::getModelInfo("rpart")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("cp", values = par_range$cp)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("cp", values = par_range$cp)		
 		)
 	} else if (lrn.id == "classif.lda"){
 		par_range <- caret::getModelInfo("lda")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
+		ps <- ParamHelpers::makeParamSet(
 		)
 	} else if (lrn.id == "classif.mda"){
 		par_range <- caret::getModelInfo("mda")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
+		ps <- ParamHelpers::makeParamSet(
 		)
 	} else if (lrn.id == "classif.h2o.glm"){
 		par_range <- caret::getModelInfo("glm")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
+		ps <- ParamHelpers::makeParamSet(
 		)	
 	} else if (lrn.id == "classif.h2o.gbm"){
 		par_range <- caret::getModelInfo("gbm")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-			mlr::makeDiscreteParam("max_depth", values = unique(par_range$max_depth)),
-		  	mlr::makeDiscreteParam("ntrees", values = unique(par_range$ntrees)),
-		  	mlr::makeDiscreteParam("learn_rate", values = unique(par_range$learn_rate)),
-		  	mlr::makeDiscreteParam("min_rows", values = unique(par_range$min_rows))		
+		ps <- ParamHelpers::makeParamSet(
+			ParamHelpers::makeDiscreteParam("max_depth", values = unique(par_range$max_depth)),
+		  	ParamHelpers::makeDiscreteParam("ntrees", values = unique(par_range$ntrees)),
+		  	ParamHelpers::makeDiscreteParam("learn_rate", values = unique(par_range$learn_rate)),
+		  	ParamHelpers::makeDiscreteParam("min_rows", values = unique(par_range$min_rows))		
 		)
 	} else if (lrn.id == "classif.nnTrain"){
-		ps <- mlr::makeParamSet(
-	     	mlr::makeDiscreteParam("max.number.of.layers", values = seq(2,5)),
-	     	mlr::makeDiscreteParam("hidden", values = list(
+		ps <- ParamHelpers::makeParamSet(
+	     	ParamHelpers::makeDiscreteParam("max.number.of.layers", values = seq(2,5)),
+	     	ParamHelpers::makeDiscreteParam("hidden", values = list(
 				a = rep(5, 5),
 				b = rep(10, 5),
 				c = rep(20, 5),
@@ -173,20 +173,20 @@ get_ps <- function(lrn.id, data, grid_resolution){
 				g = rep(200, 5)
 				)
 			),
-			mlr::makeDiscreteParam("activationfun", values = c("tanh")),
-			mlr::makeDiscreteParam("output", values = c("softmax")),
-	      	mlr::makeDiscreteParam("numepochs", values = c(20)), # changing number of epochs
-	      	# mlr::makeDiscreteParam("learningrate", values = c(0.05,0.01,0.005,0.001)),
-	      	mlr::makeDiscreteParam("learningrate", values = c(0.5, 0.1, 0.05, 0.01, 0.005)),
-	      	mlr::makeDiscreteParam("batchsize", values = c(16, 32, 64)),
-	      	# mlr::makeDiscreteParam("batchsize", values = c(nrow(data$data))),
-	      	mlr::makeDiscreteParam("momentum", values = seq(0.5, 0.9, by = 0.1)),
-	      	mlr::makeDiscreteParam("hidden_dropout", values = c(0, 0.1, 0.2)),
-	      	mlr::makeDiscreteParam("visible_dropout", values = c(0, 0.1, 0.2))
+			ParamHelpers::makeDiscreteParam("activationfun", values = c("tanh")),
+			ParamHelpers::makeDiscreteParam("output", values = c("softmax")),
+	      	ParamHelpers::makeDiscreteParam("numepochs", values = c(20)), # changing number of epochs
+	      	# ParamHelpers::makeDiscreteParam("learningrate", values = c(0.05,0.01,0.005,0.001)),
+	      	ParamHelpers::makeDiscreteParam("learningrate", values = c(0.5, 0.1, 0.05, 0.01, 0.005)),
+	      	ParamHelpers::makeDiscreteParam("batchsize", values = c(16, 32, 64)),
+	      	# ParamHelpers::makeDiscreteParam("batchsize", values = c(nrow(data$data))),
+	      	ParamHelpers::makeDiscreteParam("momentum", values = seq(0.5, 0.9, by = 0.1)),
+	      	ParamHelpers::makeDiscreteParam("hidden_dropout", values = c(0, 0.1, 0.2)),
+	      	ParamHelpers::makeDiscreteParam("visible_dropout", values = c(0, 0.1, 0.2))
 	    )
 	} else if (lrn.id == "classif.h2o.deeplearning"){
-		ps <- mlr::makeParamSet(
-			mlr::makeDiscreteParam("activation", values = c(
+		ps <- ParamHelpers::makeParamSet(
+			ParamHelpers::makeDiscreteParam("activation", values = c(
 				"Rectifier",    
 				"RectifierWithDropout", 
 				"Maxout", 
@@ -194,7 +194,7 @@ get_ps <- function(lrn.id, data, grid_resolution){
 				"Tanh", 
 				"TanhWithDropout")
 			),
-			mlr::makeDiscreteParam("hidden", values = list(
+			ParamHelpers::makeDiscreteParam("hidden", values = list(
 				a = c(20, 20), 
 				b = c(50, 50), 
 				c = c(5, 5, 5, 5, 5), 
@@ -205,38 +205,38 @@ get_ps <- function(lrn.id, data, grid_resolution){
 				g = c(100, 100, 100)
 				)
 			),
-			mlr::makeDiscreteParam("epochs", values = c(100)),
-			mlr::makeDiscreteParam("seed", values = c(120)),
-			mlr::makeDiscreteParam("l1", values = seq(0, 1e-4, length.out = 20)),
-			mlr::makeDiscreteParam("l2", values = seq(0, 1e-4, length.out = 20)),
-			mlr::makeDiscreteParam("adaptive_rate", values = list(a = TRUE)),
-			# mlr::makeDiscreteParam("rate", values = c(0.005, 0.001)),
-			# mlr::makeDiscreteParam("rate_annealing", values = c(1e-8, 1e-7, 1e-6)),
-			mlr::makeDiscreteParam("rho", values = c(0.9, 0.95, 0.99, 0.999)),
-			mlr::makeDiscreteParam("epsilon", values = c(1e-10, 1e-8, 1e-6, 1e-4)),
-			# mlr::makeDiscreteParam("momentum_start", values = c(0.5)),
-			# mlr::makeDiscreteParam("momentum_stable", values = c(0.99)),
-			mlr::makeDiscreteParam("input_dropout_ratio", values = c(0, 0.1, 0.2)),
-			mlr::makeDiscreteParam("max_w2", values = c(10, 100, 1000))
+			ParamHelpers::makeDiscreteParam("epochs", values = c(100)),
+			ParamHelpers::makeDiscreteParam("seed", values = c(120)),
+			ParamHelpers::makeDiscreteParam("l1", values = seq(0, 1e-4, length.out = 20)),
+			ParamHelpers::makeDiscreteParam("l2", values = seq(0, 1e-4, length.out = 20)),
+			ParamHelpers::makeDiscreteParam("adaptive_rate", values = list(a = TRUE)),
+			# ParamHelpers::makeDiscreteParam("rate", values = c(0.005, 0.001)),
+			# ParamHelpers::makeDiscreteParam("rate_annealing", values = c(1e-8, 1e-7, 1e-6)),
+			ParamHelpers::makeDiscreteParam("rho", values = c(0.9, 0.95, 0.99, 0.999)),
+			ParamHelpers::makeDiscreteParam("epsilon", values = c(1e-10, 1e-8, 1e-6, 1e-4)),
+			# ParamHelpers::makeDiscreteParam("momentum_start", values = c(0.5)),
+			# ParamHelpers::makeDiscreteParam("momentum_stable", values = c(0.99)),
+			ParamHelpers::makeDiscreteParam("input_dropout_ratio", values = c(0, 0.1, 0.2)),
+			ParamHelpers::makeDiscreteParam("max_w2", values = c(10, 100, 1000))
 		)
 	} else if (lrn.id == "classif.rda"){
 		par_range <- caret::getModelInfo("rda")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("gamma", values = unique(par_range$gamma)),
-		  	mlr::makeDiscreteParam("lambda", values = unique(par_range$lambda))		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("gamma", values = unique(par_range$gamma)),
+		  	ParamHelpers::makeDiscreteParam("lambda", values = unique(par_range$lambda))		
 		)
 	} else if (lrn.id == "classif.naiveBayes"){
 		par_range <- caret::getModelInfo("nb")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-		  	mlr::makeDiscreteParam("laplace", values = par_range$smooth)		
+		ps <- ParamHelpers::makeParamSet(
+		  	ParamHelpers::makeDiscreteParam("laplace", values = par_range$smooth)		
 		)
 	} else if (lrn.id == "classif.xgboost"){
 		par_range <- caret::getModelInfo("xgbTree")[[1]]$grid(x = data$data, y = data$labels, len = grid_resolution)
-		ps <- mlr::makeParamSet(
-			mlr::makeDiscreteParam("max_depth", values = unique(par_range$max_depth)),
-			# mlr::makeDiscreteParam("nrounds", values = unique(par_range$nrounds))
-			# mlr::makeDiscreteParam("nrounds", values = seq(10, 1e-4, length.out = 20)) # matching RF	
-			mlr::makeDiscreteParam("nrounds", values = c(seq(10, 100, by = 10)))
+		ps <- ParamHelpers::makeParamSet(
+			ParamHelpers::makeDiscreteParam("max_depth", values = unique(par_range$max_depth)),
+			# ParamHelpers::makeDiscreteParam("nrounds", values = unique(par_range$nrounds))
+			# ParamHelpers::makeDiscreteParam("nrounds", values = seq(10, 1e-4, length.out = 20)) # matching RF	
+			ParamHelpers::makeDiscreteParam("nrounds", values = c(seq(10, 100, by = 10)))
 			# makeDiscreteParam("eta", values = unique(par_range$eta)),	
 			# makeDiscreteParam("gamma", values = unique(par_range$gamma)),	
 			# makeDiscreteParam("colsample_bytree", values = unique(par_range$colsample_bytree)),
@@ -274,7 +274,7 @@ get_final_learners <- function(wrapped_learners, PATH, region, bestBMR_tune){
 		lrn <- mlr::makeLearner(lrn.id, predict.type = wrapped_learner$predict.type)
 		ps <- as.list(tune %>% dplyr::filter(.data$learner.id == lrn.id) %>% dplyr::pull(.data$mfv))
 		names(ps) <- tune %>% dplyr::filter(.data$learner.id == lrn.id) %>% dplyr::pull(.data$variable)
-		PS <- mlr::getParamSet(lrn)$pars
+		PS <- ParamHelpers::getParamSet(lrn)$pars
 		for (i in seq_along(ps)){
 			psType <- PS[[names(ps)[i]]]$type
 			if(psType == "discrete") psType <- "character"
