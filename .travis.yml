@@ -9,6 +9,10 @@ before_install:
   - sudo apt-get -y install libgdal-dev libgeos-dev libproj-dev 
   - sudo apt-get -y install libudunits2-dev
 
+env:
+  global:
+    - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
+
 warnings_are_errors: false
 
 after_success:
