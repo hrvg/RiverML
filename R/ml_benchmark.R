@@ -231,6 +231,7 @@ compute_final_model <- function(learners, tasks, prob, mes, LRN_IDS){
 #' @param FS_NUM `numeric`, number of features to select if `FS` is `TRUE`         
 #' @importFrom magrittr %>%                     
 #' @importFrom rlang .data
+#' @keywords ml-benchmark
 #' @export
 #' @return a list of `mlr` benchmark results
 regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "SCC", "SC", "SJT"), LRN_IDS, TUNELENGTH, INNER, ITERS, PROB, NU, REPS, PREPROC, FINAL, PATH, REDUCED, MES, INFO, FS, FS_NUM){

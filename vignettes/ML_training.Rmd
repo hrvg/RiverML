@@ -108,6 +108,8 @@ if (FINAL){
 } 
 ```
 
+These data are used to train the final models with the optimal number of parameters and the most stable value of tuning parameters.
+
 # Starting the benchmark
 
 Once the parameters have been correctly defined, the benchmark is handled with `regional_benchmark()`.

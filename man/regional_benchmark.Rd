@@ -75,3 +75,4 @@ Here is a some pseudo-code that explains what is happening behind the scenes.
 \item \emph{Compute benchmark}. The benchmark is run with \code{compute_final_model()} or \code{compute_benchmark()} (which needs to retrieve the outer #' folds of the nested resampling with \code{get_outers()}).
 }
 }
+\keyword{ml-benchmark}

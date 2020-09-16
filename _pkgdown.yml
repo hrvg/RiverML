@@ -1,3 +1,23 @@
+navbar:
+  structure:
+    left:  [home, intro, articles, reference, news]
+
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Data preparation
+        menu:
+        - text: Making the target dataset
+          href: articles/make_target_dataset.html
+        - text: Making the training dataset
+          href: articles/make_training_dataset.html
+      - text: -------       
+      - text: Machine learning models
+        menu:
+        - text: Training complete benchmark
+          href: articles/ML_training.html
+          
 reference:
   - title: Getting target data
   - subtitle: Geospatial data

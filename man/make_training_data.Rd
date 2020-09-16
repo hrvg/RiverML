@@ -15,3 +15,4 @@ a \code{data.frame} with an additional column \code{channel_type}
 \description{
 Transform training data from \code{list} to \code{data.frame}
 }
+\keyword{ml-data-loading}

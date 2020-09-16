@@ -87,6 +87,7 @@ get_coords <- function(region){
 #' Transform training data from `list` to `data.frame`
 #' @param smote_data  a named list with two elements `data` and `labels`
 #' @return a `data.frame` with an additional column `channel_type`
+#' @keywords ml-data-loading
 #' @export
 make_training_data <- function(smote_data){
 	training_data <- cbind(smote_data$data, channel_type = smote_data$labels)
