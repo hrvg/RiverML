@@ -19,8 +19,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-# library(RiverML)
-devtools::load_all()
+library(RiverML)
 library(magrittr)
 ```
 
@@ -48,8 +47,7 @@ The associated results in `BMR_res` are provided with the package.
 ```{r getting BMR perf}
 data("BMR_res")
 BMR_perf <- getBMR_perf_tune(BMR_res, type = "perf")
-BMR_tune <- getBMR_perf_tune(BMR_res, type = "tune")
-BMR_tune %>% dplyr::sample_n(10) %>%
+BMR_perf %>% dplyr::sample_n(10) %>%
 	knitr::kable(digits = 3, format = "html", caption = "benchmark results") %>% 
 	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
 	kableExtra::scroll_box(width = "7in", height = "5in")
@@ -81,7 +79,7 @@ The search window influence (`window_size`) is examined with `makeWindowInfluenc
 selectedPATH <- system.file("extdata/selectedFeatures/", package = "RiverML")
 ```
 
-```{r influence of window size}
+```{r influence of window size, eval = TRUE}
 makeWindowInfluencePlot(BMR_perf, selectedPATH, lrn = "randomForest") + 
 	ggplot2::xlim(c(0,20))
 ```
@@ -97,11 +95,11 @@ In our example above, with a window size of 8, there is a major jump in the numb
 The optimal feature sets are obtained for each learner by using `get_bestFeatureSets()`.
 
 ```{r optimal feature sets}
-bestFeatureSets <- get_bestFeatureSets(BMR_perf, selectedPATH, window_size = 7) %>% 
-	dplyr::filter(learner.id == "randomForest")
+bestFeatureSets <- get_bestFeatureSets(BMR_perf, selectedPATH, window_size = 7)
 ```
 
 A convenience function, `makeAllFeatureImportancePlotsFS()`, creates all the feature importance plots  from the standpoint of feature selection, that is evaluating which feature is present in the optimal feature sets.
+Here is an example for the `SFE` region.
 
 ```{r all feature importance plots}
 FeatureImportancePlots <- makeAllFeatureImportancePlotFS(BMR_perf, selectedPATH, bestFeatureSets)
@@ -119,5 +117,43 @@ freq_bestFeatureSets %>%
 	ggplot2::labs(title = "Top 20 predictors in optimal RF models", y = "variable importance across all areas of study")
 ```
 
+## Performance of optimal models
+
+We now turn to analyzing the tuning result contained in `BMR_tune`.
+
+```{r getting BMR tune}
+BMR_tune <- getBMR_perf_tune(BMR_res, type = "tune")
+BMR_tune %>% dplyr::sample_n(10) %>%
+	knitr::kable(digits = 3, format = "html", caption = "benchmark results") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+This data is subsetted by the optimal model selection with `getBestBMRTune()`.
+The resulting `data.frame` can be visualized with `makeBestTuneAUCPlot()` to compare the results of the optimal models.
+
+```{r subsetting and visualizing AUC for optimal models}
+bestBMR_tune <- getBestBMRTune(BMR_tune, bestFeatureSets)
+makeBestTuneAUCPlot(bestBMR_tune)
+```
+
 ## Tuning entropy
+
+Because the benchmark used nested resampling, we have access to a distribution of best tune hyper-parameters which can be visualized with `getTunePlot()`.
+
+```{r detailed tuning entropy}
+getTunePlot(bestBMR_tune, "nnTrain")
+```
+
+In addition, while the previous plot focused on the optimal, we can investigate how the tuning entropy evolves with the number of selected features using `getBMRTuningEntropy()`, `getBestBMRTuningEntropy()`, and `makeTuningEntropyPlot()`.
+Here is one example for the `SFE` region.
+
+```{r tuning entropy}
+TUNELENGTH <- 16
+BMR_lrnH <- getBMRTuningEntropy(BMR_tune, TUNELENGTH)
+bestBMR_lrnH <- getBestBMRTuningEntropy(BMR_lrnH, bestFeatureSets, bestBMR_tune)
+p_Hnorms <- makeTuningEntropyPlot(BMR_lrnH, bestBMR_lrnH)
+p_Hnorms[["SFE"]]
+```
+
 

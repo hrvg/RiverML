@@ -4,13 +4,12 @@
 #' The function leverages `get_BMR()`, `mlr::getBMRPerformances()` and `mlr::getBMRTuneResults()`.
 #' 
 #' @param PATH initial path
-#' @pattern `character`, default to `FS_`, the pattern for selecting the sub-directories
+#' @param pattern `character`, default to `FS_`, the pattern for selecting the sub-directories
 #' @return a named list with two elements `perf` and `tune` the benchmark performance results and the tuning results
 #' @keywords ml-postprocess
 #' @import progress
 #' @export
 getAllBMRS <- function(PATH, pattern = "FS_"){
-	import::here(.from = "./R/utils/lib_regional_comparison.R", get_BMR)
 	dirList <- list.dirs(PATH, recursive = FALSE)
 	dirList <- dirList[grepl(pattern, dirList)]
 	FS_NUM_LIST <- sapply(dirList, function(dir) unlist(strsplit(dir, pattern))[2])
@@ -77,8 +76,8 @@ getBMR_perf_tune <- function(BMR_res, type = "perf"){
 #' @param BMR_perf a `data.frame` of benchmark performance results
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
-#' @export
 #' @importFrom magrittr %>%
+#' @export
 makeAverageAUCPlot <- function(BMR_perf){
 	BMR_avg <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(avg = mean(multiclass.au1u))
 	p_avg <- ggplot2::ggplot(BMR_avg %>% dplyr::filter(learner.id != "featureless"), ggplot2::aes(x = FS_NUM, y = avg, group = learner.id, color = learner.id)) + 
@@ -94,8 +93,8 @@ makeAverageAUCPlot <- function(BMR_perf){
 #' @param BMR_perf a `data.frame` of benchmark performance results
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
-#' @export
 #' @importFrom magrittr %>%
+#' @export
 makeAverageAccPlot <- function(BMR_perf){
 	BMR_acc <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(avg = mean(acc))
 	p_acc <- ggplot2::ggplot(BMR_acc, ggplot2::aes(x = FS_NUM, y = avg, group = learner.id, color = learner.id)) + 
@@ -111,8 +110,8 @@ makeAverageAccPlot <- function(BMR_perf){
 #' @param BMR_perf a `data.frame` of benchmark performance results
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
-#' @export
 #' @importFrom magrittr %>%
+#' @export
 makeTotalTimetrainPlot <- function(BMR_perf){
 	BMR_time <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(time = sum(timetrain) / 3600)
 	p_timetrain <- ggplot2::ggplot(BMR_time, ggplot2::aes(x = FS_NUM, y = time, group = learner.id, color = learner.id)) + 
@@ -138,6 +137,7 @@ makeTotalTimetrainPlot <- function(BMR_perf){
 #' @return a named list with names from `task.id`
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @export
 makeExampleModelSelectionPlot <- function(BMR_perf, lrn = c("svm", "randomForest"), confidence_level = 0.05, window_size = 7){
 	plim <-  confidence_level / window_size
 	p_examples <- lapply(unique(BMR_perf$task.id), function(reg){
@@ -186,6 +186,7 @@ makeExampleModelSelectionPlot <- function(BMR_perf, lrn = c("svm", "randomForest
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @export
 makeWindowInfluencePlot <- function(BMR_perf, selectedPATH, lrn = "randomForest"){
 	Y2_data <- regional_characteristics %>% dplyr::mutate(region = gsub("ALLSAC", "SAC", region)) %>% dplyr::arrange(region)
 	l_bestFeatureSets <- lapply(seq(2,49), function(x){
@@ -214,6 +215,7 @@ makeWindowInfluencePlot <- function(BMR_perf, selectedPATH, lrn = "randomForest"
 #' @return a `data.frame` with the optimal model number of features and selected features per `task.id` and `learner.id`
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @export
 get_bestFeatureSets <- function(BMR_perf, selectedPATH, lrn = c("svm", "randomForest", "nnTrain"), window_size = 5, confidence_level = 0.05){
 	plim <- confidence_level / window_size
 	stat_test <- BMR_perf %>% dplyr::filter(learner.id %in% lrn) %>%
@@ -307,8 +309,8 @@ makeAllFeatureImportancePlotFS <- function(BMR_perf, selectedPATH, bestFeatureSe
 #' @param first `numeric`, number of feature to display
 #' @param best `logical`, default to `FALSE`, to highlight which features are selected in an optimal (best) set
 #' @return a `ggplot` object
-#' @export
 #' @keywords ml-postprocess
+#' @export
 makeFeatureImportancePlot <- function(FeatureImportance, first = 20, best = FALSE){
 	FeatureImportance <- fixVarNames(FeatureImportance, var = "var")
 	FeatureImportance$type <- factor(FeatureImportance$type, 
@@ -338,8 +340,8 @@ makeFeatureImportancePlot <- function(FeatureImportance, first = 20, best = FALS
 #' @param df a `data.frame`
 #' @param var `character` the name of the `var` column in `df
 #' @return a `data.frame` with fixed variable names
-#' @export
 #' @keywords ml-postprocess
+#' @export
 fixVarNames <- function(df, var = "var"){
 	df[[var]] <- gsub("H.", "Hurst Coefficient ", df[[var]], fixed = TRUE)
 	df[[var]] <- gsub("SLOPE", "Slope", df[[var]])
@@ -386,9 +388,9 @@ fixVarNames <- function(df, var = "var"){
 #' Get the frequency of selection of a given feature across all regions
 #' @param bestFeatureSets the optimal selected features for each regions
 #' @return a `data.frame`
-#' @export
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @export
 getFreqBestFeatureSets <- function(bestFeatureSets){
 	bestFeatureSets <- bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min))
 	freq_bestFeatureSets <- dplyr::group_by(bestFeatureSets, task.id) %>% 
@@ -397,4 +399,184 @@ getFreqBestFeatureSets <- function(bestFeatureSets){
 	freq_bestFeatureSets <- freq_bestFeatureSets[!duplicated(freq_bestFeatureSets$task.id), ]
 	freq_bestFeatureSets <- rstatix::freq_table(unlist(lapply(freq_bestFeatureSets$features, function(fl) strsplit(fl, " ")))) %>% dplyr::mutate(prop = n / nrow(freq_bestFeatureSets))
 	return(freq_bestFeatureSets)	
+}
+
+#' Get the tuning results of the optimal models
+#' @param BMR_tune a `data.frame` containing the results of the tuning
+#' @param bestFeatureSets the optimal selected features for each regions
+#' @return a `data.frame` subsetted to correspond to the `bestFeatureSets`
+#' @keywords ml-postprocess
+#' @importFrom magrittr %>%
+#' @export
+getBestBMRTune <- function(BMR_tune, bestFeatureSets){
+	bestBMR_tune <- dplyr::left_join(
+		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min)),
+		BMR_tune, 
+		by = c("task.id" = "task.id", "learner.id" = "learner.id", "min" = "FS_NUM")
+		) %>%
+	dplyr::rename(FS_NUM = min) 
+	return(bestBMR_tune)
+}
+
+#' Make a violin plot comparing the results from the optimal models
+#' 
+#' The significant difference between the models are shown with a t-test with unequal variance
+#' 
+#' @param bestBMR_tune a `data.frame` containing the results of the optimal models
+#' @return a `ggplot` object
+#' @keywords ml-postprocess
+#' @importFrom magrittr %>%
+#' @export
+makeBestTuneAUCPlot <- function(bestBMR_tune){
+	stat_test <- bestBMR_tune %>% dplyr::group_by(task.id) %>% rstatix::t_test(multiclass.au1u ~ learner.id, var.equal = FALSE)
+	p_bestTuneAUC <- ggpubr::ggviolin(bestBMR_tune, 
+		x = "learner.id", 
+		y = "multiclass.au1u", 
+		facet.by = c("task.id")) +
+		ggpubr::stat_pvalue_manual(
+			stat_test %>% as.data.frame() %>% dplyr::mutate(y.position = 1.05),  
+			label = "p.adj.signif",
+			step.increase = 0.1, 
+			step.group.by = c("task.id"), 
+			hide.ns = TRUE) +
+		ggplot2::labs(x = "ML Model", 
+			y = "Multiclass 1v1 AUC") + 
+		ggpubr::theme_pubr() +
+		ggplot2::scale_x_discrete(labels=c(
+			# "xgboost" = "XGB",
+			"nnTrain" = "ANN",
+			"randomForest" = "RF",
+			"svm" = "SVM"))
+	return(p_bestTuneAUC)
+}
+
+
+#' Get hyper-parameters names
+#' @param lrn a `mlr` `learner.id`
+#' @return `character` list of the hyper-parameter(s) name(s)
+#' @keywords ml-postprocess
+#' @export
+getHyperparNames <- function(lrn){
+	vars <- switch(as.character(lrn), 
+		"randomForest" = c("mtry"),
+		"svm" = c("cost"),
+		"nnTrain" = c("max.number.of.layers", "hidden", "learningrate", "batchsize", "momentum", "visible_dropout", "hidden_dropout")
+	)
+	return(vars)
+}
+
+#' Calculates entropy
+#' @param var numeric, vector of values
+#' @return entropy in log2 units
+#' @keywords ml-postprocess
+#' @export
+normH <- function(var){
+	prop <- rstatix::freq_table(var)$prop
+	philentropy::H(prop / sum(prop), unit = "log2")
+}
+
+#' Compute the tuning entropy
+#' @param BMR_tune a `data.frame` containing the results of the tuning
+#' @param TUNELENGTH `numeric`, tuning length
+#' @param maxH_nnTrain `numeric` the maximum value for entropy for the `nnTrain` learner
+#' @return a `data.frame`
+#' @keywords ml-postprocess
+#' @importFrom magrittr %>%
+#' @export
+getBMRTuningEntropy <- function(BMR_tune, TUNELENGTH, maxH_nnTrain = sum(sapply(c(5, 7,5,3,5,3,3), log2))){
+	BMR_lrnH <- BMR_tune %>% dplyr::group_by(task.id, FS_NUM, learner.id) %>% 
+		dplyr::group_modify(~ 
+			dplyr::summarize_at(.x, getHyperparNames(unique(.y$learner.id)), normH) %>%
+			dplyr::transmute(total_tuning_entropy = rowSums(.))
+		) %>%	
+		reshape2::melt(id.vars = c("task.id", "learner.id", "FS_NUM"))
+	BMR_lrnH$value[BMR_lrnH$learner.id == "svm"] <- BMR_lrnH$value[BMR_lrnH$learner.id == "svm"] / log2(TUNELENGTH)	
+	BMR_lrnH$grid_size <- BMR_lrnH$FS_NUM - 1
+	BMR_lrnH$grid_size[BMR_lrnH$grid_size > TUNELENGTH] <- TUNELENGTH
+	BMR_lrnH$value[BMR_lrnH$learner.id == "randomForest"] <- BMR_lrnH$value[BMR_lrnH$learner.id == "randomForest"] / log2(BMR_lrnH$grid_size[BMR_lrnH$learner.id == "randomForest"])
+	BMR_lrnH$value[BMR_lrnH$learner.id == "nnTrain"] <- BMR_lrnH$value[BMR_lrnH$learner.id == "nnTrain"] / maxH_nnTrain
+	BMR_lrnH$value[is.na(BMR_lrnH$value)] <- 0
+	return(BMR_lrnH)
+}
+
+#' Get the tuning entropy corresponding to the optimal models
+#' @param BMR_lrnH a `data.frame` generated with `getBMRTuningEntropy()`
+#' @param bestFeatureSets the optimal selected features for each regions
+#' @param bestBMR_tune a `data.frame` containing the results of the tuning for optimal models
+#' @importFrom magrittr %>%
+#' @keywords ml-postprocess
+#' @export
+getBestBMRTuningEntropy <- function(BMR_lrnH, bestFeatureSets, bestBMR_tune){
+	bestBMR_lrnH <- dplyr::left_join(
+		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min)), 
+		BMR_lrnH, 
+		by = c("task.id" = "task.id", "learner.id" = "learner.id", "min" = "FS_NUM")
+		) %>%
+		dplyr::rename(FS_NUM = min, tuning_entropy = value) %>%
+		dplyr::select(- "variable")
+	bestBMR_lrnH <- dplyr::left_join(
+		bestBMR_lrnH, 
+		bestBMR_tune %>%
+		reshape2::melt(measure.vars = c("cost", "mtry", "max.number.of.layers")) %>%
+		dplyr::group_by(task.id, learner.id, variable, FS_NUM) %>%
+		dplyr::summarize(
+			min_hyperpar = min(value), 
+			max_hyperpar = max(value),
+			len_hyperpar = length(unique(value)),
+			mfv_hyperpar = min(modeest::mfv(value))) %>%
+		na.omit(),
+		by = c("task.id", "learner.id", "FS_NUM")
+		)
+	bestBMR_lrnH <- dplyr::left_join(
+		bestBMR_lrnH, 
+		bestBMR_tune %>%
+		dplyr::group_by(task.id, learner.id, FS_NUM) %>%
+		dplyr::summarize(
+			mean_auc = mean(multiclass.au1u),
+			mean_timetrain = mean(timetrain),
+			mean_acc = mean(acc)) %>%
+		na.omit(),
+		by = c("task.id", "learner.id", "FS_NUM")
+	)
+	return(bestBMR_lrnH)
+}
+
+#' Create a plot of the evolution of tuning entropy with the number of selected features
+#' @param BMR_lrnH a `data.frame` generated with `getBMRTuningEntropy()`
+#' @param bestBMR_lrnH a `data.frame` with the tuning entropy corresponding to the optimal models
+#' @importFrom magrittr %>%
+#' @keywords ml-postprocess
+#' @export
+makeTuningEntropyPlot <- function(BMR_lrnH, bestBMR_lrnH){
+	p_Hnorms <- lapply(unique(BMR_lrnH$task.id), function(task){
+		p_Hnorm <- ggplot2::ggplot(BMR_lrnH %>% dplyr::filter(task.id == task), ggplot2::aes(x = FS_NUM, y = value, group = learner.id, color = learner.id)) + 
+			ggplot2::geom_line() +
+			ggplot2::stat_smooth(fill=NA, alpha=1, lwd = 1.5) +
+			ggplot2::geom_point(data = bestBMR_lrnH %>% dplyr::filter(task.id == task), ggplot2::aes(x = FS_NUM, y = tuning_entropy), size = 4) +
+			ggplot2::facet_grid(~ task.id) +
+			ggplot2::labs(x = "Number of Predictors", 
+				y = "Normalized Tuning Entropy") +
+			ggpubr::theme_pubr()
+		return(p_Hnorm)	
+		})
+	names(p_Hnorms) <- unique(BMR_lrnH$task.id)
+	return(p_Hnorms)
+}
+
+
+#' Plot the distribution of hyper-parameters resulting from the nested resampling
+#' @param BMR a `data.frame` with tuning results
+#' @param lrn `character` a `mlr` `learner.id`
+#' @return a `ggplot` object
+#' @importFrom magrittr %>%
+#' @keywords ml-postprocess
+#' @export
+getTunePlot <- function(BMR, lrn){
+	tuneResults <- BMR %>% dplyr::filter(learner.id == lrn) %>% dplyr::select(dplyr::all_of(c("task.id", getHyperparNames(lrn))))
+	TunePlot <- ggplot2::ggplot(reshape2::melt(tuneResults, id.vars = "task.id") %>% dplyr::mutate(value = as.factor(value)), ggplot2::aes(x = value, fill = task.id, color = task.id)) +
+		ggplot2::geom_bar(position=ggplot2::position_dodge2()) +
+		ggpubr::theme_pubr() +
+		ggplot2::labs(x = "") +
+		ggplot2::facet_wrap(~ variable, scales = "free_x")
+	return(TunePlot)	
 }
