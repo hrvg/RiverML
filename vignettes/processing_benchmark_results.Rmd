@@ -1,0 +1,92 @@
+---
+title: "Processing benchmark results"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Processing benchmark results}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 7,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(RiverML)
+library(magrittr)
+```
+
+# Merging benchmark results
+
+The output files from the HPC are organized with one folder per learner and sub-folders for regions.
+The following snippet merges all the benchmark results using `getAllBMRS()`.
+
+```
+PATH <- "F:/hguillon/research/regional_benchmark/"
+dirs <- list.dirs(PATH, recursive = FALSE, full.names = FALSE)
+
+bmrs <- lapply(dirs, function(dir){getAllBMRS(file.path(PATH, dir), pattern = paste0(dir, "_"))})
+bmrs_perf <- lapply(bmrs, function(bmr) bmr$perf)
+bmrs_tune <- lapply(bmrs[dirs != "baseline"], function(bmr) bmr$tune  %>% distinct())
+
+BMR_res <- list()
+BMR_res$perf <- do.call(rbind, bmrs_perf)
+BMR_res$tune <-  bmrs_tune[[1]]
+for (i in seq_along(bmrs_tune)[-1]) BMR_res$tune <- full_join(BMR_res$tune, bmrs_tune[[i]])
+```
+
+The associated results in `BMR_res` are provided with the package.
+
+```{r}
+data("BMR_res")
+BMR_perf <- getBMR_perf_tune(BMR_res, type = "perf")
+BMR_tune <- getBMR_perf_tune(BMR_res, type = "tune")
+BMR_tune %>% dplyr::sample_n(10) %>%
+	knitr::kable(digits = 3, format = "html", caption = "benchmark results") %>% 
+	kableExtra::kable_styling(bootstrap_options = c("hover", "condensed")) %>% 
+	kableExtra::scroll_box(width = "7in", height = "5in")
+```
+
+# Processing benchmark results
+
+## Performance plots
+
+```{r}
+makeAverageAUCPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
+makeAverageAccPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
+makeTotalTimetrainPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
+```
+
+## Model selection
+
+The model selection is handled by examining statistical differences between the distribution of performance metrics for successive iterations of model training with an increasing number of predictors.
+On the following graph, the brackets indicate statistically significant differences between the distribution assessed by a Dunn test for the `SAC` region and the `randomForest` learner.
+
+```{r}
+makeExampleModelSelectionPlot(BMR_perf, lrn = c("randomForest"), window_size = 7)[["SAC"]]
+```
+
+The p-value is internally ajusted to take into account multiple comparison with a Bonferroni correction.
+The search window influence (`window_size`) is examined with `makeWindowInfluencePlot()` which requires use to declare where we are storing the names of the selected features for each iterations.
+
+```{r}
+selectedPATH <- system.file("extdata/selectedFeatures/", package = "RiverML")
+makeWindowInfluencePlot(BMR_perf, selectedPATH, lrn = "randomForest") + ggplot2::xlim(c(0,20))
+```
+
+The window size selection is mainly based on the evolution of the number of optimal predictors per classes in a given region of study with respect to the window size.
+This balances a trade-off between two effects.
+A large window increases the likelihood to find a statistically different performance distribution is high and selects a large number of predictors.
+A small window decreases the likelihood to find statistically significant difference but might miss the inclusion of an important predictor leading to a significant increase in performance.
+In our example above, with a window size of 8, there is a major jump in the number of predictors per class which increases the likelihood of overfit for the optimal models.
+
+## Feature importance
+
+## Tuning entropy

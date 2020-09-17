@@ -17,7 +17,9 @@ navbar:
         menu:
         - text: Training complete benchmark
           href: articles/ML_training.html
-          
+        - text: Processing benchmark results
+          href: articles/processing_benchmark_results.html
+
 reference:
   - title: Getting target data
   - subtitle: Geospatial data
@@ -44,7 +46,10 @@ reference:
     - has_keyword("ml-learners")        
   - subtitle: Benchmark
   - contents:
-    - has_keyword("ml-benchmark")  
+    - has_keyword("ml-benchmark")
+  - subtitle: Benchmark post-processing
+  - contents:
+    - has_keyword("ml-postprocess")  
   - title: Datasets
   - contents:
     - has_keyword("dataset")

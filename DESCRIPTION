@@ -38,6 +38,7 @@ Imports:
   rgdal,
   rgeos,
   rlang,
+  scales,
   sf,
   sp,
   spacetime,
