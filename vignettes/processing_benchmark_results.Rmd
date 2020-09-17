@@ -45,7 +45,7 @@ for (i in seq_along(bmrs_tune)[-1]) BMR_res$tune <- full_join(BMR_res$tune, bmrs
 
 The associated results in `BMR_res` are provided with the package.
 
-```{r}
+```{r getting BMR perf}
 data("BMR_res")
 BMR_perf <- getBMR_perf_tune(BMR_res, type = "perf")
 BMR_tune <- getBMR_perf_tune(BMR_res, type = "tune")
@@ -59,7 +59,7 @@ BMR_tune %>% dplyr::sample_n(10) %>%
 
 ## Performance plots
 
-```{r}
+```{r performance plots}
 makeAverageAUCPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
 makeAverageAccPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
 makeTotalTimetrainPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25, 50))
@@ -70,16 +70,20 @@ makeTotalTimetrainPlot(BMR_perf) + ggplot2::scale_x_continuous(breaks = c(5, 25,
 The model selection is handled by examining statistical differences between the distribution of performance metrics for successive iterations of model training with an increasing number of predictors.
 On the following graph, the brackets indicate statistically significant differences between the distribution assessed by a Dunn test for the `SAC` region and the `randomForest` learner.
 
-```{r}
+```{r example of model selection}
 makeExampleModelSelectionPlot(BMR_perf, lrn = c("randomForest"), window_size = 7)[["SAC"]]
 ```
 
 The p-value is internally ajusted to take into account multiple comparison with a Bonferroni correction.
 The search window influence (`window_size`) is examined with `makeWindowInfluencePlot()` which requires use to declare where we are storing the names of the selected features for each iterations.
 
-```{r}
+```{r selected path}
 selectedPATH <- system.file("extdata/selectedFeatures/", package = "RiverML")
-makeWindowInfluencePlot(BMR_perf, selectedPATH, lrn = "randomForest") + ggplot2::xlim(c(0,20))
+```
+
+```{r influence of window size}
+makeWindowInfluencePlot(BMR_perf, selectedPATH, lrn = "randomForest") + 
+	ggplot2::xlim(c(0,20))
 ```
 
 The window size selection is mainly based on the evolution of the number of optimal predictors per classes in a given region of study with respect to the window size.
@@ -90,4 +94,30 @@ In our example above, with a window size of 8, there is a major jump in the numb
 
 ## Feature importance
 
+The optimal feature sets are obtained for each learner by using `get_bestFeatureSets()`.
+
+```{r optimal feature sets}
+bestFeatureSets <- get_bestFeatureSets(BMR_perf, selectedPATH, window_size = 7) %>% 
+	dplyr::filter(learner.id == "randomForest")
+```
+
+A convenience function, `makeAllFeatureImportancePlotsFS()`, creates all the feature importance plots  from the standpoint of feature selection, that is evaluating which feature is present in the optimal feature sets.
+
+```{r all feature importance plots}
+FeatureImportancePlots <- makeAllFeatureImportancePlotFS(BMR_perf, selectedPATH, bestFeatureSets)
+FeatureImportancePlots[["SFE"]]
+```
+
+We can also investigate which features are often selected across all regions with `getFreqBestFeatureSets()`.
+
+```{r regional varimp}
+freq_bestFeatureSets <- getFreqBestFeatureSets(bestFeatureSets)
+freq_bestFeatureSets %>% 
+	dplyr::rename(var = group, Overall = prop) %>% 
+	dplyr::arrange(-Overall) %>% 
+	makeFeatureImportancePlot(first = 20) + 
+	ggplot2::labs(title = "Top 20 predictors in optimal RF models", y = "variable importance across all areas of study")
+```
+
 ## Tuning entropy
+

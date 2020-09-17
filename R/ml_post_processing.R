@@ -252,3 +252,149 @@ get_bestFeatureSets <- function(BMR_perf, selectedPATH, lrn = c("svm", "randomFo
 	))
 	return(bestFeatureSets)
 }
+
+
+#' Create feature importance across all regions of study
+#' 
+#' This function is a wrapper around `makeFeatureImportancePlot()` and additionally highlights which features are selected in the optimal feature sets.
+#' 
+#' @param BMR_perf a `data.frame` of benchmark performance results
+#' @param selectedPATH `character`, path to the selected features
+#' @param bestFeatureSets the optimal selected features for each regions
+#' @return a named list of feature importance plot with names pulled from `task.id`
+#' @keywords ml-postprocess
+#' @importFrom magrittr %>%
+#' @export
+makeAllFeatureImportancePlotFS <- function(BMR_perf, selectedPATH, bestFeatureSets){
+	feature_df <- data.frame(
+		task.id = rep(unique(BMR_perf$task.id), length(unique(BMR_perf$FS))),	
+		FS = rep(unique(BMR_perf$FS), length(unique(BMR_perf$task.id)))
+		) %>% dplyr::arrange(FS) %>%
+		dplyr::mutate(
+			task.id = gsub("SAC", "ALLSAC", task.id),
+			FS = as.character(FS))
+	feature_df <- dplyr::mutate(feature_df, features = apply(feature_df, MARGIN = 1, function(row){
+		feats <- readRDS(file.path(selectedPATH, row[2], paste0(row[1], "_selectedFeatures.Rds")))
+		do.call(paste, as.list(feats))
+		}
+	)) %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id))
+
+	FeatureImportancePlots <- lapply(unique(feature_df$task.id), function(reg){
+		bestFeatureSet <- bestFeatureSets %>% dplyr::filter(task.id == reg) %>% 
+			dplyr::mutate(min = as.numeric(min)) %>%
+			dplyr::filter(learner.id == "randomForest") %>%
+			dplyr::filter(min == min(min)) %>%
+			dplyr::select("features") %>%
+			lapply(strsplit, " ") %>% unlist()
+
+		allSelectedFeatures <- feature_df %>% dplyr::filter(task.id == reg) %>% dplyr::select("features") %>% 
+			lapply(strsplit, " ") %>% unlist() %>% table() %>% as.data.frame() 
+		colnames(allSelectedFeatures) <- c("var", "Overall") 
+		allSelectedFeatures <- dplyr::arrange(allSelectedFeatures, -Overall)
+		allSelectedFeatures$best <- allSelectedFeatures$var %in% bestFeatureSet
+		allSelectedFeatures$best <- ifelse(allSelectedFeatures$best, "optimal RF feature set", "other sets")
+
+		p <- makeFeatureImportancePlot(allSelectedFeatures, first = 30, best = TRUE)
+		p + ggplot2::labs(title = gsub("ALLSAC", "SAC", reg))
+	})
+	names(FeatureImportancePlots) <- unique(feature_df$task.id)
+	return(FeatureImportancePlots)
+}
+
+
+#' Makes a dot chart of feature importance
+#' @param FeatureImportance a `data.frame` with column `Overall` and `var`
+#' @param first `numeric`, number of feature to display
+#' @param best `logical`, default to `FALSE`, to highlight which features are selected in an optimal (best) set
+#' @return a `ggplot` object
+#' @export
+#' @keywords ml-postprocess
+makeFeatureImportancePlot <- function(FeatureImportance, first = 20, best = FALSE){
+	FeatureImportance <- fixVarNames(FeatureImportance, var = "var")
+	FeatureImportance$type <- factor(FeatureImportance$type, 
+		levels = c("TAM", "GIS", "Statistical roughness", "Topology", "Contextual"),
+		labels = c("TAM", "GIS", "Statistical roughness", "Topology", "Contextual"))
+	FeatureImportance <- head(FeatureImportance, first)
+	if (best){
+		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = type)) +
+		        ggplot2::geom_point(ggplot2::aes(x=Overall, y=forcats::fct_reorder(var,Overall))) +
+				ggplot2::geom_segment(ggplot2::aes(linetype = best, x = 0, xend = Overall, y = forcats::fct_reorder(var,Overall), yend = forcats::fct_reorder(var,Overall))) +
+		        ggplot2::labs(title = "RF model importance (top 20 variables)", y = "variable", x = "variable importance") + 
+				ggplot2::theme_minimal() +
+		        ggplot2::scale_color_discrete(drop = FALSE)
+		p	
+	} else {
+		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = type)) +
+		        ggplot2::geom_point(ggplot2::aes(x=Overall, y=forcats::fct_reorder(var,Overall))) +
+				ggplot2::geom_segment(ggplot2::aes(x = 0, xend = Overall, y = forcats::fct_reorder(var,Overall), yend = forcats::fct_reorder(var,Overall))) +
+		        ggplot2::labs(title = "RF model importance (top 20 variables)", y = "variable", x = "variable importance") + 
+				ggplot2::theme_minimal() +
+		        ggplot2::scale_color_discrete(drop = FALSE)
+		p		
+	}
+}
+
+#' Fixes variable names for data visualization purpose
+#' @param df a `data.frame`
+#' @param var `character` the name of the `var` column in `df
+#' @return a `data.frame` with fixed variable names
+#' @export
+#' @keywords ml-postprocess
+fixVarNames <- function(df, var = "var"){
+	df[[var]] <- gsub("H.", "Hurst Coefficient ", df[[var]], fixed = TRUE)
+	df[[var]] <- gsub("SLOPE", "Slope", df[[var]])
+	df[[var]] <- gsub("SO", "Stream order", df[[var]])
+	df[[var]] <- gsub("CONFINEMEN", "Valley confinement", df[[var]])
+	df[[var]] <- gsub("WsAreaSqKm", "Watershed Drainage area", df[[var]])
+	df[[var]] <- gsub("CatAreaSqKm", "Local Drainage area", df[[var]])
+	df[[var]] <- gsub("LDD", "Local Drainage Density", df[[var]])
+	df[[var]] <- gsub("_skew", " skewness ", df[[var]])
+	df[[var]] <- gsub("_sd", " standard deviation ", df[[var]])
+	df[[var]] <- gsub("_min", " min ", df[[var]])
+	df[[var]] <- gsub("_max", " max ", df[[var]])
+	df[[var]] <- gsub("_mean", " mean ", df[[var]])
+	df[[var]] <- gsub("_median", " median ", df[[var]])
+	df[[var]] <- gsub("flowdir", "Flow direction", df[[var]])
+	df[[var]] <- gsub("curvplan", "Curvature (planform)", df[[var]])
+	df[[var]] <- gsub("curvprof", "Curvature (profile)", df[[var]])
+	df[[var]] <- gsub("aspect", "Aspect", df[[var]])
+	df[[var]] <- gsub(".rstr", "(raster)", df[[var]])
+	df[[var]] <- gsub(".nrch", "(near)", df[[var]])
+	df[[var]] <- gsub("tpi", "TPI", df[[var]])
+	df[[var]] <- gsub("tri", "TRI", df[[var]])
+	df[[var]] <- gsub("roughness", "Roughness", df[[var]])
+	df[[var]] <- gsub("elevation", "Elevation", df[[var]])
+	df[[var]] <- gsub("layer", "Elevation", df[[var]])
+	df[[var]] <- gsub("north_california_NED_13", "Elevation", df[[var]])
+	df[[var]] <- gsub("slope", "Slope", df[[var]])
+	df$type <- sapply(df[[var]], function(var){
+		if (grepl("Hurst", var)){
+			return("Statistical roughness")
+		} else if (grepl("\\(", var)) {
+			return("TAM")
+		} else if (var %in% c("Valley confinement", "Slope")){
+			return("GIS")
+		} else if (var %in% c("Local Drainage area", "Watershed Drainage area", "Local Drainage Density", "Stream order")){
+			return("Topology")
+		} else {	
+			return("Contextual")
+		}
+	})
+	return(df)
+}
+
+#' Get the frequency of selection of a given feature across all regions
+#' @param bestFeatureSets the optimal selected features for each regions
+#' @return a `data.frame`
+#' @export
+#' @keywords ml-postprocess
+#' @importFrom magrittr %>%
+getFreqBestFeatureSets <- function(bestFeatureSets){
+	bestFeatureSets <- bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min))
+	freq_bestFeatureSets <- dplyr::group_by(bestFeatureSets, task.id) %>% 
+		dplyr::filter(learner.id == "randomForest") %>%
+		dplyr::filter(min == min(min)) %>% dplyr::ungroup()
+	freq_bestFeatureSets <- freq_bestFeatureSets[!duplicated(freq_bestFeatureSets$task.id), ]
+	freq_bestFeatureSets <- rstatix::freq_table(unlist(lapply(freq_bestFeatureSets$features, function(fl) strsplit(fl, " ")))) %>% dplyr::mutate(prop = n / nrow(freq_bestFeatureSets))
+	return(freq_bestFeatureSets)	
+}
