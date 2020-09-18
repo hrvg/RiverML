@@ -58,5 +58,4 @@ Suggests:
     rmarkdown,
     pkgdown
 Remotes:
-    url::http://www.omegahat.net/R/src/contrib/XML_3.99-0.tar.gz
 VignetteBuilder: knitr
