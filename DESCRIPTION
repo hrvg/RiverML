@@ -57,5 +57,4 @@ Suggests:
     testthat,
     rmarkdown,
     pkgdown
-Remotes:
 VignetteBuilder: knitr
