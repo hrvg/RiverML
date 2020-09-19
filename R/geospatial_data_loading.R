@@ -129,7 +129,8 @@ get_points_from_input_data <- function(input_data, .crs = sp::CRS("+proj=longlat
 #' @export
 #' @keywords geospatial-data
 snap_points_to_points <- function(points_a, points_b){
-	spdst <- terra::distance(terra::vect(points_a), terra::vect(points_b))
+	spdst <- sp::spDists(points_a, points_b)
 	snap <- apply(spdst, 1, which.min)
+	if(!all(table(snap) == 1)) warning("Some duplicate locations are being returned.")
 	return(snap)
 }
