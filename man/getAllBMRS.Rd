@@ -8,6 +8,8 @@ getAllBMRS(PATH, pattern = "FS_")
 }
 \arguments{
 \item{PATH}{initial path}
+
+\item{pattern}{\code{character}, default to \code{FS_}, the pattern for selecting the sub-directories}
 }
 \value{
 a named list with two elements \code{perf} and \code{tune} the benchmark performance results and the tuning results
