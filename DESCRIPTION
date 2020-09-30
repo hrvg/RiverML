@@ -17,6 +17,7 @@ Depends: R (>= 3.5.0)
 Imports:
   automap,
   caret,
+  ccber,
   data.table,
   dplyr,
   e1071,
@@ -25,6 +26,7 @@ Imports:
   ggpubr,
   gstat,
   h2o,
+  igraph,
   kableExtra,
   knitr,
   magrittr,
@@ -46,6 +48,7 @@ Imports:
   rstatix,
   scales,
   sf,
+  sfnetworks,
   sp,
   spacetime,
   stringr,
@@ -58,3 +61,5 @@ Suggests:
     rmarkdown,
     pkgdown
 VignetteBuilder: knitr
+Remotes:
+  github::bvegetabile/ccber

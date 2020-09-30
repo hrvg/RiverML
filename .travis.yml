@@ -3,6 +3,11 @@ r:
   - 3.6.1
 cache: packages
 
+# safelist
+branches:
+  only:
+  - master
+
 before_install:
   - sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
   - sudo apt-get -q update

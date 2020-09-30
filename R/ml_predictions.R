@@ -206,3 +206,66 @@ calibrated_predictions <- function(REGIONS, LRN_IDS, preds, calibrations){
 	names(calibrated_predictions) <- REGIONS
 	return(calibrated_predictions)
 }
+
+#' Calculates Shannon-Weiner entropy
+#' @param l a list of values numeric or factor
+#' @param .prob_bool if TRUE, l is understood as a list of probabilities, if FALSE l is understood as a factor
+#' @param units units of the logarithm in the calculation of entropy
+#' @return Shannon-Weiner entropy
+#' @keywords ml-predictions
+#' @export
+shannon_weiner <- function(l, .prob_bool = FALSE, units = exp(1)){
+	if (.prob_bool){
+		relative_prob <- l
+	} else {
+		lvls <- levels(l)
+		relative_prob <- sapply(lvls, function(lvl) length(which(l == lvl))/length(l))		
+	}
+	shannon_weiner_value <- sapply(relative_prob, function(prob) prob*log(prob, base = units))
+	shannon_weiner_value <- - sum(na.omit(shannon_weiner_value))
+	return(shannon_weiner_value)
+}
+
+#' Calculate the richness (number of different species)
+#' @param l a list of values numeric or factor
+#' @return the richness
+#' @keywords ml-predictions
+#' @export
+richness <- function(l){
+	rich <- length(unique(l))
+	return(rich)
+}
+
+#' Calculate Simpson's evenness
+#' @param l a list of values numeric or factor
+#' @param .prob_bool if TRUE, l is understood as a list of probabilities, if FALSE l is understood as a factor
+#' @return Simpson's evenness
+#' @keywords ml-predictions
+#' @export
+simpson_evenness <- function(l, .prob_bool = FALSE){
+	if (.prob_bool){
+		relative_prob <- l
+	} else {
+		lvls <- levels(l)
+		relative_prob <- sapply(lvls, function(lvl) length(which(l == lvl))/length(l))		
+	}
+	D <- relative_prob^2
+	D <- 1 / sum(na.omit(D))
+	D_max <- richness(l)
+	evenness <- D / D_max
+	return(evenness)
+}
+
+#' Formats entropy rate results
+#' @param entropy_rate a list of list
+#' @importFrom magrittr %>%
+#' @export
+#' @return a formatted `data.frame`
+#' @keywords ml-predictions
+get_entropy_df <- function(entropy_rate){
+	entropy_rate_df <- reshape2::melt(t(as.data.frame(entropy_rate))) %>% 
+		dplyr::rename(region = Var1, learner.id = Var2, entropy_rate = value) %>%
+		dplyr::mutate(region = gsub("ALLSAC", "SAC", region)) %>%
+		dplyr::arrange(region)
+	return(entropy_rate_df)
+}
