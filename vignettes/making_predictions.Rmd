@@ -1,0 +1,116 @@
+---
+title: "Making predictions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Making predictions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Purpose
+
+Once final optimal models have been trained, predictions can be made.
+
+# Libraries
+
+
+```{r setup}
+library(RiverML)
+```
+
+
+# Initialization
+
+The first step in making predictions is retrieving the trained models and parameters from the benchmark.
+As it is likely that the users are running more than one iterations of one benchmark (or in general more than one benchmark), this is handled by the `PATH` variable.
+This is similar to the `PATH` specified when [training the models](articles/ML_training.html).
+
+The `PATH` directory should contains a `PARAMETERS.Rds` corresponding to the final model parameters. We can retrieve the parameters we need from it with:
+
+```
+PARAMETERS <- readRDS(file.path(PATH, paste0("PARAMETERS.Rds")))
+PROB <- PARAMETERS$PROB
+PREPROC <- PARAMETERS$PREPROC
+REGIONS <- PARAMETERS$REGIONS
+LRN_IDS <- PARAMETERS$LRN_IDS
+```
+
+We also have to specify if feature selection has been activated.
+If so: `TUNE_FS <- TRUE` and we have to edit the `PATH` variable.
+Additionally we perform some cosmetic changes in the `.id` variables and filter for the learners that have a final model. 
+
+```
+if (TUNE_FS){
+	PATH <- "F:/hguillon/research/FS_MI_corr2"
+	bestFeatureSets <- readRDS("./data/FS/bestFeatureSets.Rds") %>% 
+		mutate(
+			learner.id = paste0("classif.", learner.id),
+			task.id = gsub("SAC", "ALLSAC", task.id)
+		) %>%
+		filter(learner.id %in% LRN_IDS)
+}
+```
+
+# Computing predictions
+
+## Uncalibrated predictions on the training dataset
+
+Obtaining the predictions for the training dataset is handled with `get_predictions()` with `TARGET = FALSE`.
+
+```
+training_preds <- get_predictions(REGIONS, LRN_IDS, PATH, TARGET = FALSE, TUNE_FS)
+```
+
+## Uncalibrated predictions on the target dataset
+
+Obtaining the predictions for the target dataset is handled with `get_predictions()` with `TARGET = TRUE`.
+
+```
+target_preds <- get_predictions(REGIONS, LRN_IDS, PATH, TARGET = TRUE, TUNE_FS)
+```
+
+## Calibrating predictions
+
+Most machine learning models output posterior probabilities that often require calibration.
+Such calibration corrects for the potential distortion of the posterior probabilities when compared to empirical probabilities and improves model performance [@DeGroot1983; @Zadrozny2002a; @Niculescu-Mizil2005].
+Given the sigmoid-shape of most distortions, [@Platt1999] proposed a sigmoid calibration to address this effect.
+This is the so-called Platt's scaling.
+Other useful approaches include Bayesian calibration and isotonic scaling [@Zadrozny2002] which both require binarizing the problem.
+Useful references on binarization includes @Platt2000; @Kijsirikul2002; @Dong2005; @Lorena2010; @Quiterio2016; @Adnan2015; @Melnikov2018.
+In this study, posterior calibration was performed using a multinomial regression; a straightforward extension of the binomial case corresponding to the logistic Platt's scaling.
+We use the `R` package `glmnet` to fit a generalized linear model with an elastic net penalty and with a 10-fold cross-validation with the function `get_calibrations()`.
+
+
+The option `plot = TRUE` returns a calibration plot which highlights the amount of calibration per class.
+It is always a good sign when the predictions do not require a large amount of correction and is a qualitative check on the performance of one or multiple models.
+Finally, note that the calibration are performed with the original and possibly unequally sampled training dataset.
+
+```
+calibrations <- get_calibrations(REGIONS, LRN_IDS, training_preds, plot = TRUE)
+```
+
+## Making calibrated predictions
+
+Once the `calibrations` have been derived, `calibrated_predictions()` calibrates the target predictions:
+
+```
+cal_preds <- calibrated_predictions(REGIONS, LRN_IDS, target_preds, calibrations)
+```
+
+# Spatially distributing the predictions
+
+## Assigning the predictions to a shapefile
+
+## Estimating stream interval entropy
+
+## Estimating entropy rate
+
+# References
