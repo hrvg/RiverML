@@ -1,0 +1,272 @@
+---
+title: "Making predictions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Making predictions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+# Purpose
+
+Once final optimal models have been trained, predictions can be made.
+
+# Libraries
+
+
+```{r setup, eval = TRUE}
+library(RiverML)
+library(magrittr)
+library(raster)
+```
+
+
+# Initialization
+
+The first step in making predictions is retrieving the trained models and parameters from the benchmark.
+As it is likely that the users are running more than one iterations of one benchmark (or in general more than one benchmark), this is handled by the `PATH` variable.
+This is similar to the `PATH` specified when [training the models](articles/ML_training.html).
+
+The `PATH` directory should contains a `PARAMETERS.Rds` corresponding to the final model parameters. We can retrieve the parameters we need from it with:
+
+```{r}
+PARAMETERS <- readRDS(file.path(PATH, paste0("PARAMETERS.Rds")))
+PROB <- PARAMETERS$PROB
+PREPROC <- PARAMETERS$PREPROC
+REGIONS <- PARAMETERS$REGIONS
+LRN_IDS <- PARAMETERS$LRN_IDS
+```
+
+We also have to specify if feature selection has been activated.
+If so: `TUNE_FS <- TRUE` and we have to edit the `PATH` variable.
+Additionally we perform some cosmetic changes in the `.id` variables and filter for the learners that have a final model. 
+
+```{r}
+if (TUNE_FS){
+	PATH <- "F:/hguillon/research/FS_MI_corr2"
+	bestFeatureSets <- readRDS("./data/FS/bestFeatureSets.Rds") %>% 
+		dplyr::mutate(
+			learner.id = paste0("classif.", learner.id),
+			task.id = gsub("SAC", "ALLSAC", task.id)
+		) %>%
+		dplyr::filter(learner.id %in% LRN_IDS)
+}
+```
+
+# Computing predictions
+
+## Uncalibrated predictions on the training dataset
+
+Obtaining the predictions for the training dataset is handled with `get_predictions()` with `TARGET = FALSE`.
+
+```{r}
+training_preds <- get_predictions(REGIONS, LRN_IDS, PATH, TARGET = FALSE, TUNE_FS)
+```
+
+## Uncalibrated predictions on the target dataset
+
+Obtaining the predictions for the target dataset is handled with `get_predictions()` with `TARGET = TRUE`.
+
+```{r}
+target_preds <- get_predictions(REGIONS, LRN_IDS, PATH, TARGET = TRUE, TUNE_FS)
+```
+
+## Calibrating predictions
+
+Most machine learning models output posterior probabilities that often require calibration.
+Such calibration corrects for the potential distortion of the posterior probabilities when compared to empirical probabilities and improves model performance [@DeGroot1983; @Zadrozny2002a; @Niculescu-Mizil2005].
+Given the sigmoid-shape of most distortions, [@Platt1999] proposed a sigmoid calibration to address this effect.
+This is the so-called Platt's scaling.
+Other useful approaches include Bayesian calibration and isotonic scaling [@Zadrozny2002] which both require binarizing the problem.
+Useful references on binarization includes @Platt2000; @Kijsirikul2002; @Dong2005; @Lorena2010; @Quiterio2016; @Adnan2015; @Melnikov2018.
+In this study, posterior calibration was performed using a multinomial regression; a straightforward extension of the binomial case corresponding to the logistic Platt's scaling.
+We use the `R` package `glmnet` to fit a generalized linear model with an elastic net penalty and with a 10-fold cross-validation with the function `get_calibrations()`.
+
+
+The option `plot = TRUE` returns a calibration plot which highlights the amount of calibration per class.
+It is always a good sign when the predictions do not require a large amount of correction and is a qualitative check on the performance of one or multiple models.
+Finally, note that the calibration are performed with the original and possibly unequally sampled training dataset.
+
+```{r}
+calibrations <- get_calibrations(REGIONS, LRN_IDS, training_preds, plot = TRUE)
+```
+
+## Making calibrated predictions
+
+Once the `calibrations` have been derived, `calibrated_predictions()` calibrates the target predictions:
+
+```{r}
+cal_preds <- calibrated_predictions(REGIONS, LRN_IDS, target_preds, calibrations)
+```
+
+# Spatially distributing the predictions
+
+Because this step of the workflow write a number of file, it is easier to run it within a loop statement.
+Before we dive into the different stage of said loop, some variables have to be initialized.
+`entropy_rate` describes the instability of the predictions from a transition probability point-of-view.
+`regional_entropy` describes the instability of the predictions over the entire prediction region.
+
+```{r}
+entropy_rate <- rep(list(rep(NA, length(LRN_IDS))), length(REGIONS))
+names(entropy_rate) <- REGIONS
+for (region in REGIONS) names(entropy_rate[[region]]) <- LRN_IDS
+
+regional_entropy <- rep(list(rep(NA, length(LRN_IDS) + 1)), length(REGIONS))
+names(regional_entropy) <- REGIONS
+for (region in REGIONS) names(regional_entropy[[region]]) <- c("training", LRN_IDS)
+```
+
+We can then enter the loop over area of studies:
+
+```{r}
+for (region in REGIONS){
+```
+
+First we retrieve the target streamlines with:
+
+```{r}
+.target_streamlines <- get_target_streamlines(region)
+```
+
+Then we enter the loop over the ML models:
+
+```{r}
+	for (lrn in LRN_IDS){
+		target_streamlines <- .target_streamlines
+		predictions_df <- as.data.frame(cal_preds[[region]][[lrn]])
+```
+
+If there are post-hoc heuristics, this is where one would implement them.
+For example, one heuristic could be to assign a class based on the Strahler's order, here the class `K03` in region `K`.
+
+```{r}
+		if (region == "K"){
+			predictions_df[which(target_streamlines$StreamOrde >= 5), grepl("K03", colnames(predictions_df))] <- 1
+			rSum <- rowSums(predictions_df)
+		  	predictions_df <- sweep(predictions_df, 1, rSum,'/')
+		} 
+```
+
+A good check to implement is to ensure that all predictions sum to one (bar some rounding errors).
+
+```{r}
+		check <- apply(predictions_df, 1, sum)
+		stopifnot(all(check >= 1 - 1E-9))
+```
+
+We can retrieve the response as being the class with the highest probability.
+Another sanity check at this step is to investigate the distribution of the predicted classes over the entire region.
+Such a check can uncover early on (that is before any mapping) that some classes are under-represented in the predictions.
+
+```{r}
+		lvls <- gsub("prob.", "", colnames(predictions_df))
+		target_predictions <- apply(predictions_df, MARGIN = 1, FUN = function(row){
+			lvls[which.max(as.numeric(row))]
+		})
+		target_predictions <- as.factor(target_predictions)
+		print(table(target_predictions))
+```
+
+From the probabilistic predictions, we can derive a number of metrics of their distribution at the regional level which `shannon_weiner()`, `richness()` and `simpson_evenness()`.
+Again, this is useful at this stage to capture the potential difference between the distribution of the training labels and the predictions over the entire region.
+If the sampling of the training dataset has been correctly stratified before, one would expect that at the region level the distribution of the predictions is close to the one of the training labels.
+If that is not the case, that might indicate some issues with the generalization of the learned patterns.
+
+```{r}
+		shannon_network_training <- shannon_weiner(training_preds[[region]]$labels, units = 2)
+		richness_network_training <- richness(training_preds[[region]]$labels)
+		simpson_evenness_network_training <- simpson_evenness(training_preds[[region]]$labels)
+
+		shannon_network_target <- shannon_weiner(target_predictions, units = 2)
+		richness_network_target <- richness(target_predictions)
+		simpson_evenness_network_target <- simpson_evenness(target_predictions)
+
+		metrics_df <- data_frame(training = c(richness_network_training, simpson_evenness_network_training, shannon_network_training),
+			target = c(richness_network_target, simpson_evenness_network_target, shannon_network_target))
+		rownames(metrics_df) <- c("Richness", "Simpson's evenness", "Shannon-Weiner's value")
+		print(metrics_df)
+		if (richness_network_target != richness_network_training) warning("One of the class is not predicted at all over the whole network!")
+```
+
+These metrics can be extended at the stream interval level, that is at the instance level.
+
+```{r}
+		shannon_segments <- apply(predictions_df, MARGIN = 1, FUN = shannon_weiner, .prob_bool = TRUE, units = 2)
+		richness_segments <- apply(predictions_df, MARGIN = 1, FUN = richness)
+		evenness_segments <- apply(predictions_df, MARGIN = 1, FUN = simpson_evenness, .prob_bool = TRUE)
+```
+
+We can now assign these values to the target streamlines and save the results into a `.shp` shapefile.
+
+```{r}
+		target_streamlines$group <- target_predictions
+		target_streamlines$shannon <- shannon_segments
+		target_streamlines$richness <- richness_segments
+		target_streamlines$evenness <- evenness_segments
+		nc <- ncol(target_streamlines)
+		target_streamlines@data <- data.frame(target_streamlines@data, predictions_df)
+		names(target_streamlines) <- c(head(names(target_streamlines), nc), lvls)
+
+		fname <- file.path(paste0(PATH, "/", region), paste0(region, '_', gsub("classif.", "", lrn) ,'_calibrated_predictions'))
+		if(file.exists(paste0(fname, ".shp"))){
+			file.remove(paste0(fname, ".shp")) # clean the attribute names in the shapefile
+			file.remove(paste0(fname, ".prj")) # clean the attribute names in the shapefile
+			file.remove(paste0(fname, ".shx")) # clean the attribute names in the shapefile
+			file.remove(paste0(fname, ".dbf")) # clean the attribute names in the shapefile
+		}
+		shapefile(target_streamlines[ind, ], paste0(fname, ".shp"), overwrite = TRUE)
+```
+
+We now turn to the calculation of the entropy rate.
+This is derived from the transition probability matrix which we first have to compute.
+We first turn the `target_streamlines` into a network that we can work on with the `igraph` package.
+This allows to derive the incident edges at each vertex and thus which class is connected to which other.
+When we average this connectivity matrix over the entire network we obtain the probability of transition between the different classes.
+We can readily use this transition probability matrix to derive the entropy rate, that is the limit value of entropy (or surprise) while one walks along the stream network.
+
+```{r}
+		numeric_group <- as.factor(as.integer(as.numeric(target_streamlines$group)))
+		fname <- file.path(paste0(PATH, "/", region), paste0(lrn, ".Rds"))
+		streamlines_network <- sfnetworks::as_sfnetwork(sf::st_as_sf(target_streamlines), directed = FALSE)
+		igraph_object <- igraph::as.igraph(streamlines_network)
+		ie <- igraph::incident_edges(igraph_object, V(igraph_object))
+		ie_list <- lapply(ie, function(es)	as.vector(table(numeric_group[as_ids(es)])))
+		ie_df <- do.call(rbind, ie_list)
+		ie_df <- ie_df[which(rowSums(ie_df) >= 2), ]
+
+		ie_count <- lapply(seq(ncol(ie_df)), function(i){
+			.df <- ie_df[which(ie_df[, i] > 0), ]
+			sapply(seq(ncol(ie_df)), function(j){
+				ifelse(i==j, sum(.df[.df[, j] > 1, j]), sum(.df[, j]))
+			})
+		})
+		count_matrix <- do.call(rbind, ie_count)
+		prob_matrix <- sweep(count_matrix, MARGIN = 1, rowSums(count_matrix), "/")
+		saveRDS(prob_matrix, fname)
+		
+		H <- ccber::CalcMarkovEntropyRate(prob_matrix, ccber::CalcEigenStationary(prob_matrix))
+		entropy_rate[[region]][[lrn]] <- H
+		regional_entropy[[region]]$training <- shannon_network_training
+		regional_entropy[[region]][[lrn]] <- shannon_network_target
+
+```
+
+Let's not forget to exit the loop over learners and the one over regions:
+
+```
+	}
+}
+```
+
+Finally, `get_entropy_df()` function provides some formatting for the `entropy_rate` list.
+
+# References

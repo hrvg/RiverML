@@ -1,6 +1,6 @@
 Package: RiverML
 Title: Machine Learning for River Science
-Version: 0.0.1
+Version: 1.0.0
 Authors@R: 
     person(given = "Hervé",
            family = "Guillon",
@@ -17,14 +17,17 @@ Depends: R (>= 3.5.0)
 Imports:
   automap,
   caret,
+  ccber,
   data.table,
   dplyr,
   e1071,
   forcats,
   ggplot2,
   ggpubr,
+  glmnet,
   gstat,
   h2o,
+  igraph,
   kableExtra,
   knitr,
   magrittr,
@@ -32,6 +35,7 @@ Imports:
   methods,
   mlr,
   modeest,
+  oce,
   parallel,
   parallelMap,
   ParamHelpers,
@@ -46,6 +50,7 @@ Imports:
   rstatix,
   scales,
   sf,
+  sfnetworks,
   sp,
   spacetime,
   stringr,
@@ -58,3 +63,6 @@ Suggests:
     rmarkdown,
     pkgdown
 VignetteBuilder: knitr
+Remotes:
+  bvegetabile/ccber,
+  luukvdmeer/sfnetworks
