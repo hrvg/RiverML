@@ -101,7 +101,7 @@ INFO <- FALSE
 
 If the benchmark has already been run (with `FINAL <- FALSE`), we can retrieve the tuning results with `get_bestBMR_tuning_results()` which can be used to retrieve tuning and tuning entropy results.
 
-```
+```{r, eval = FALSE}
 if (FINAL){
 	bestBMR_tune <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_tune.Rds", REGIONS, LRN_IDS)
 	bestBMR_lrnH <- get_bestBMR_tuning_results("./data/FS/", "bestBMR_lrnH.Rds", REGIONS, LRN_IDS)
@@ -115,7 +115,7 @@ These data are used to train the final models with the optimal number of paramet
 Once the parameters have been correctly defined, the benchmark is handled with `regional_benchmark()`.
 The `savePARAMETERS()` documents the parameters with which the benchmark is run.
 
-```
+```{r, eval = FALSE}
 if (TUNE_FS){
 	.PATH <- PATH
 	FS_NUM <- NULL

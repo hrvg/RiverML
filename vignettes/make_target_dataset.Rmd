@@ -68,7 +68,7 @@ head(target_points)
 You will want to save this `target_points` `data.frame` as a separate `.csv` with format `region_all_input.csv`. 
 Such a file is required for the next step, high performance computing.
 
-```
+```{r, eval = FALSE}
 fname <- paste0(region,"_all_input.csv")
 write.csv(target_points, file.path("path/to/output/", fname))
 ```
@@ -114,7 +114,7 @@ The arguments `$1` and `$2` specify the output directory and the type of run.
 One example for `$1` is `/home/hguillon/out/run124`.
 One example for `$2` is `SFE_all`.
 
-```
+```{bash, eval = FALSE}
 #!/bin/bash -l
 
 #SBATCH --partition=med
@@ -133,7 +133,7 @@ srun Rscript ~/farm_scripts/main_process_tam-dm.R $1 $2
 
 We first check for arguments from the submitting `slurm` commands, retrieve the `region` and `slurm_arrayid` variables and define the output files, `fname_tam` and `fname_H`.
 
-```
+```{r, eval = FALSE}
 args = commandArgs(trailingOnly=TRUE) # checking for args
 
 if (length(args)!=2) { # test if there is at least one argument: if not, return an error
@@ -311,7 +311,7 @@ target_streamcat_df$COMID <- NULL
 
 The following two chunks the `.csv` files corresponding to all arrays.
 
-```
+```{r, eval = FALSE}
 lf <- list.files(file.path(outdir), pattern = "tam.csv")
 ids <- unlist(lapply(lf, function(x) unlist(strsplit(x,"_"))[1]))
 ids <- sapply(ids, as.numeric)
@@ -320,7 +320,7 @@ l_target_data_df_tam <- lapply(lf, function(f) read.csv(file.path(outdir, f)))
 target_data_df_tam <- do.call(rbind, l_target_data_df_tam)
 ```
 
-```
+```{r, eval = FALSE}
 lf <- list.files(file.path(outdir), pattern = "H.csv")
 ids <- unlist(lapply(lf, function(x) unlist(strsplit(x,"_"))[1]))
 ids <- sapply(ids, as.numeric)

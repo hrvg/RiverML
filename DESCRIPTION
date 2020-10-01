@@ -25,6 +25,7 @@ Imports:
   ggplot2,
   ggpubr,
   gstat,
+  glmnet,
   h2o,
   igraph,
   kableExtra,

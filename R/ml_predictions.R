@@ -129,8 +129,6 @@ compute_predictions <- function(REGIONS, mods, TARGET, TUNE_FS){
 #' @keywords ml-predictions
 #' @export
 get_calibrations <- function(REGIONS, LRN_IDS, preds, plot = FALSE){
-	library("dplyr")
-	library("glmnet")
 	calibrations <- lapply(REGIONS, function(hydro_class){
 		labels <- preds[[hydro_class]]$labels
 		if (min(table(labels)) < 2){

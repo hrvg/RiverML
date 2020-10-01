@@ -19,6 +19,8 @@ navbar:
           href: articles/ML_training.html
         - text: Processing benchmark results
           href: articles/processing_benchmark_results.html
+        - text: Making predictions
+          href: articles/making_predictions.html
 
 reference:
   - title: Getting target data
@@ -49,7 +51,10 @@ reference:
     - has_keyword("ml-benchmark")
   - subtitle: Benchmark post-processing
   - contents:
-    - has_keyword("ml-postprocess")  
+    - has_keyword("ml-postprocess")
+  - subtitle: Predictions
+  - contents:
+    - has_keyword("ml-predictions")    
   - title: Datasets
   - contents:
     - has_keyword("dataset")

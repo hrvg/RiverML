@@ -28,7 +28,7 @@ library(magrittr)
 The output files from the HPC are organized with one folder per learner and sub-folders for regions.
 The following snippet merges all the benchmark results using `getAllBMRS()`.
 
-```
+```{r, eval = FALSE}
 PATH <- "F:/hguillon/research/regional_benchmark/"
 dirs <- list.dirs(PATH, recursive = FALSE, full.names = FALSE)
 
