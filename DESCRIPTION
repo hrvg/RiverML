@@ -64,5 +64,5 @@ Suggests:
     pkgdown
 VignetteBuilder: knitr
 Remotes:
-  bvegetabile/ccber
+  bvegetabile/ccber,
   luukvdmeer/sfnetworks
