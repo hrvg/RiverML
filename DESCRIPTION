@@ -1,6 +1,6 @@
 Package: RiverML
 Title: Machine Learning for River Science
-Version: 0.0.1
+Version: 0.3.0
 Authors@R: 
     person(given = "Hervé",
            family = "Guillon",
