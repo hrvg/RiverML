@@ -17,10 +17,10 @@ knitr::opts_chunk$set(
 
 `RiverML` uses the following Machine Learning workflow:
 
-1. Derive the [target](articles/make_target_dataset.html) and [training datasets](articles/make_training_dataset.html)
-2. Run a [benchmark](articles/ML_training.html) of models
-3. [Process the benchmark results](articles/processing_benchmark_results.html)
+1. Derive the [target](https://hrvg.github.io/RiverML/articles/make_target_dataset.html) and [training datasets](https://hrvg.github.io/RiverML/articles/make_training_dataset.html)
+2. Run a [benchmark](https://hrvg.github.io/RiverML/articles/ML_training.html) of models
+3. [Process the benchmark results](https://hrvg.github.io/RiverML/articles/processing_benchmark_results.html)
 4. Infer and train [optimal models](https://hrvg.github.io/RiverML/articles/ML_training.html#fetching-benchmark-data-if-final-is-true-1) from the benchmark results
-5. [Make predictions](articles/making_predictions.html)
-6. [Map predictions](articles/mapping_predictions.html)
+5. [Make predictions](https://hrvg.github.io/RiverML/articles/making_predictions.html)
+6. [Map predictions](https://hrvg.github.io/RiverML/articles/mapping_predictions.html)
 
