@@ -4,10 +4,12 @@
 \alias{compute_predictions}
 \title{Retrieve the final (optimal) models}
 \usage{
-compute_predictions(REGIONS, mods, TARGET, TUNE_FS)
+compute_predictions(REGIONS, LRN_IDS, mods, TARGET, TUNE_FS)
 }
 \arguments{
 \item{REGIONS}{\code{character}, the \code{task.id} identifiers and the list of area of study}
+
+\item{LRN_IDS}{\code{character}, the \code{learner.id} identifiers and the list of learners}
 
 \item{mods}{a named list of models returned by \code{get_final_models()}}
 

@@ -79,8 +79,8 @@ getBMR_perf_tune <- function(BMR_res, type = "perf"){
 #' @importFrom magrittr %>%
 #' @export
 makeAverageAUCPlot <- function(BMR_perf){
-	BMR_avg <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(avg = mean(multiclass.au1u))
-	p_avg <- ggplot2::ggplot(BMR_avg %>% dplyr::filter(learner.id != "featureless"), ggplot2::aes(x = FS_NUM, y = avg, group = learner.id, color = learner.id)) + 
+	BMR_avg <- BMR_perf %>% dplyr::group_by(.data$task.id, .data$learner.id, .data$FS_NUM) %>% dplyr::summarize(avg = mean(.data$multiclass.au1u))
+	p_avg <- ggplot2::ggplot(BMR_avg %>% dplyr::filter(.data$learner.id != "featureless"), ggplot2::aes(x = .data$FS_NUM, y = .data$avg, group = .data$learner.id, color = .data$learner.id)) + 
 		ggplot2::geom_line() +
 		ggplot2::facet_wrap(~ task.id, nrow = 2) +
 		ggplot2::labs(x = "Number of Predictors", 
@@ -94,10 +94,11 @@ makeAverageAUCPlot <- function(BMR_perf){
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 makeAverageAccPlot <- function(BMR_perf){
-	BMR_acc <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(avg = mean(acc))
-	p_acc <- ggplot2::ggplot(BMR_acc, ggplot2::aes(x = FS_NUM, y = avg, group = learner.id, color = learner.id)) + 
+	BMR_acc <- BMR_perf %>% dplyr::group_by(.data$task.id, .data$learner.id, .data$FS_NUM) %>% dplyr::summarize(avg = mean(.data$acc))
+	p_acc <- ggplot2::ggplot(BMR_acc, ggplot2::aes(x = .data$FS_NUM, y = .data$avg, group = .data$learner.id, color = .data$learner.id)) + 
 		ggplot2::geom_line() +
 		ggplot2::facet_grid(~ task.id) +
 		ggplot2::labs(x = "Number of Predictors", 
@@ -110,11 +111,13 @@ makeAverageAccPlot <- function(BMR_perf){
 #' @param BMR_perf a `data.frame` of benchmark performance results
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 makeTotalTimetrainPlot <- function(BMR_perf){
-	BMR_time <- BMR_perf %>% dplyr::group_by(task.id, learner.id, FS_NUM) %>% dplyr::summarize(time = sum(timetrain) / 3600)
-	p_timetrain <- ggplot2::ggplot(BMR_time, ggplot2::aes(x = FS_NUM, y = time, group = learner.id, color = learner.id)) + 
+	.x <- NULL
+	BMR_time <- BMR_perf %>% dplyr::group_by(.data$task.id, .data$learner.id, .data$FS_NUM) %>% dplyr::summarize(time = sum(.data$timetrain) / 3600)
+	p_timetrain <- ggplot2::ggplot(BMR_time, ggplot2::aes(x = .data$FS_NUM, y = .data$time, group = .data$learner.id, color = .data$learner.id)) + 
 		ggplot2::geom_smooth(fill = NA, lwd = 1) +
 		ggplot2::geom_line(alpha = 0.5) +
 		ggplot2::facet_grid(~ task.id) +
@@ -136,29 +139,30 @@ makeTotalTimetrainPlot <- function(BMR_perf){
 #' @param window_size `numeric`, width of the search window
 #' @return a named list with names from `task.id`
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 makeExampleModelSelectionPlot <- function(BMR_perf, lrn = c("svm", "randomForest"), confidence_level = 0.05, window_size = 7){
 	plim <-  confidence_level / window_size
 	p_examples <- lapply(unique(BMR_perf$task.id), function(reg){
-		BMR_df <- BMR_perf %>% dplyr::filter(task.id %in% reg, learner.id %in% lrn)
+		BMR_df <- BMR_perf %>% dplyr::filter(.data$task.id %in% reg, .data$learner.id %in% lrn)
 
-		stat_test <- BMR_df %>% dplyr::filter(learner.id %in% lrn) %>%
-			  dplyr::mutate(FS_NUM = as.factor(FS_NUM)) %>%
-			  dplyr::group_by(learner.id, task.id) %>% 
+		stat_test <- BMR_df %>% dplyr::filter(.data$learner.id %in% lrn) %>%
+			  dplyr::mutate(FS_NUM = as.factor(.data$FS_NUM)) %>%
+			  dplyr::group_by(.data$learner.id, .data$task.id) %>% 
 			  rstatix::dunn_test(multiclass.au1u ~ FS_NUM, p.adjust.method = "none")
 
 		ypos = 1
 		step_increase = 0.05
 
 		stat_test <- stat_test %>% as.data.frame() %>%
-					dplyr::filter(as.numeric(group2) <= (as.numeric(group1) + (window_size - 1))) %>%
+					dplyr::filter(as.numeric(.data$group2) <= (as.numeric(.data$group1) + (window_size - 1))) %>%
 			  		dplyr::mutate(y.position = ypos) %>%
-			  		dplyr::filter(p.adj <= plim)
+			  		dplyr::filter(.data$p.adj <= plim)
 
 		p_example <- ggpubr::ggboxplot(BMR_df %>% 
-			dplyr::filter(learner.id %in% lrn) %>% 
-			dplyr::mutate(FS_NUM = as.numeric(as.character(FS_NUM))), 
+			dplyr::filter(.data$learner.id %in% lrn) %>% 
+			dplyr::mutate(FS_NUM = as.numeric(as.character(.data$FS_NUM))), 
 			x = "FS_NUM", 
 			y = "multiclass.au1u", 
 			fill = "learner.id", 
@@ -186,18 +190,20 @@ makeExampleModelSelectionPlot <- function(BMR_perf, lrn = c("svm", "randomForest
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 makeWindowInfluencePlot <- function(BMR_perf, selectedPATH, lrn = "randomForest"){
-	Y2_data <- regional_characteristics %>% dplyr::mutate(region = gsub("ALLSAC", "SAC", region)) %>% dplyr::arrange(region)
+	# utils::globalVariables("regional_characteristics")
+	Y2_data <- regional_characteristics %>% dplyr::mutate(region = gsub("ALLSAC", "SAC", .data$region)) %>% dplyr::arrange(.data$region)
 	l_bestFeatureSets <- lapply(seq(2,49), function(x){
 		df <- get_bestFeatureSets(BMR_perf, selectedPATH, window_size = x) %>% 
-			dplyr::filter(learner.id == lrn) %>%
-			dplyr::mutate(window_size = x, min = as.numeric(min), min_per_class = min / Y2_data$n.classes)
+			dplyr::filter(.data$learner.id == lrn) %>%
+			dplyr::mutate(window_size = x, min = as.numeric(.data$min), min_per_class = .data$min / Y2_data$n.classes)
 		return(df)
 	})
-	bestFeatureSets_df <- do.call(rbind, l_bestFeatureSets)  %>% dplyr::select(-features, -learner.id)
+	bestFeatureSets_df <- do.call(rbind, l_bestFeatureSets)  %>% dplyr::select(-.data$features, -.data$learner.id)
 
-	p_window <- ggplot2::ggplot(bestFeatureSets_df, ggplot2::aes(x = window_size, y = min_per_class, group = task.id, color = task.id)) +
+	p_window <- ggplot2::ggplot(bestFeatureSets_df, ggplot2::aes(x = .data$window_size, y = .data$min_per_class, group = .data$task.id, color = .data$task.id)) +
 		ggplot2::geom_line() + 
 		ggplot2::geom_point() + 
 		ggplot2::labs(x = "Window size", 
@@ -215,38 +221,39 @@ makeWindowInfluencePlot <- function(BMR_perf, selectedPATH, lrn = "randomForest"
 #' @return a `data.frame` with the optimal model number of features and selected features per `task.id` and `learner.id`
 #' @keywords ml-postprocess
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 get_bestFeatureSets <- function(BMR_perf, selectedPATH, lrn = c("svm", "randomForest", "nnTrain"), window_size = 5, confidence_level = 0.05){
 	plim <- confidence_level / window_size
-	stat_test <- BMR_perf %>% dplyr::filter(learner.id %in% lrn) %>%
-		  dplyr::group_by(learner.id, task.id) %>%
+	stat_test <- BMR_perf %>% dplyr::filter(.data$learner.id %in% lrn) %>%
+		  dplyr::group_by(.data$learner.id, .data$task.id) %>%
 		  rstatix::dunn_test(multiclass.au1u ~ FS_NUM, p.adjust.method = "none")	
 
 	foo <- function(.x, window_size){
-		if (nrow(.x %>% dplyr::filter(as.numeric(p.adj) <= plim)) == 0){
-			return(dplyr::summarize(.x, min = min(group1)))
+		if (nrow(.x %>% dplyr::filter(as.numeric(.data$p.adj) <= plim)) == 0){
+			return(dplyr::summarize(.x, min = min(.data$group1)))
 		} 
-		.x <- .x %>% dplyr::filter(as.numeric(p.adj) <= plim)
+		.x <- .x %>% dplyr::filter(as.numeric(.data$p.adj) <= plim)
 		ind <- which(.x$group2 <= (.x$group1 + (window_size - 1)))
 		if (length(ind) > 0){
 			.x <- .x %>% 
-			dplyr::filter(group2 <= (group1 + (window_size - 1))) %>%
-			dplyr::filter(group1 == max(group1)) %>%
-			dplyr::summarize(min = min(group2))
+			dplyr::filter(.data$group2 <= (.data$group1 + (window_size - 1))) %>%
+			dplyr::filter(.data$group1 == max(.data$group1)) %>%
+			dplyr::summarize(min = min(.data$group2))
 		} else {
 			ind <- which.min(.x$group1)
 			.x <- .x[ind, ] %>% 
-			dplyr::summarize(min = min(group1))
+			dplyr::summarize(min = min(.data$group1))
 		}
 		return(.x)
 	}
 
 	bestFeatureSets <- stat_test %>% 
-		dplyr::group_by(task.id, learner.id) %>%
-		dplyr::mutate(group1 = as.numeric(group1), group2 = as.numeric(group2)) %>%
+		dplyr::group_by(.data$task.id, .data$learner.id) %>%
+		dplyr::mutate(group1 = as.numeric(.data$group1), group2 = as.numeric(.data$group2)) %>%
 		dplyr::group_modify(~ foo(.x, window_size)) %>% 
 		dplyr::ungroup() %>%
-		dplyr::mutate(task.id = gsub("SAC", "ALLSAC", task.id), min = as.character(min))
+		dplyr::mutate(task.id = gsub("SAC", "ALLSAC", .data$task.id), min = as.character(.data$min))
 	bestFeatureSets <- bestFeatureSets %>% dplyr::mutate(features = apply(bestFeatureSets, MARGIN = 1, function(row){
 		feats <- readRDS(file.path(selectedPATH, row[3], paste0(row[1], "_selectedFeatures.Rds")))
 		do.call(paste, as.list(feats))
@@ -271,28 +278,28 @@ makeAllFeatureImportancePlotFS <- function(BMR_perf, selectedPATH, bestFeatureSe
 	feature_df <- data.frame(
 		task.id = rep(unique(BMR_perf$task.id), length(unique(BMR_perf$FS))),	
 		FS = rep(unique(BMR_perf$FS), length(unique(BMR_perf$task.id)))
-		) %>% dplyr::arrange(FS) %>%
+		) %>% dplyr::arrange(.data$FS) %>%
 		dplyr::mutate(
-			task.id = gsub("SAC", "ALLSAC", task.id),
-			FS = as.character(FS))
+			task.id = gsub("SAC", "ALLSAC", .data$task.id),
+			FS = as.character(.data$FS))
 	feature_df <- dplyr::mutate(feature_df, features = apply(feature_df, MARGIN = 1, function(row){
 		feats <- readRDS(file.path(selectedPATH, row[2], paste0(row[1], "_selectedFeatures.Rds")))
 		do.call(paste, as.list(feats))
 		}
-	)) %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id))
+	)) %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", .data$task.id))
 
 	FeatureImportancePlots <- lapply(unique(feature_df$task.id), function(reg){
-		bestFeatureSet <- bestFeatureSets %>% dplyr::filter(task.id == reg) %>% 
-			dplyr::mutate(min = as.numeric(min)) %>%
-			dplyr::filter(learner.id == "randomForest") %>%
-			dplyr::filter(min == min(min)) %>%
+		bestFeatureSet <- bestFeatureSets %>% dplyr::filter(.data$task.id == reg) %>% 
+			dplyr::mutate(min = as.numeric(.data$min)) %>%
+			dplyr::filter(.data$learner.id == "randomForest") %>%
+			dplyr::filter(.data$min == min(.data$min)) %>%
 			dplyr::select("features") %>%
 			lapply(strsplit, " ") %>% unlist()
 
-		allSelectedFeatures <- feature_df %>% dplyr::filter(task.id == reg) %>% dplyr::select("features") %>% 
+		allSelectedFeatures <- feature_df %>% dplyr::filter(.data$task.id == reg) %>% dplyr::select("features") %>% 
 			lapply(strsplit, " ") %>% unlist() %>% table() %>% as.data.frame() 
 		colnames(allSelectedFeatures) <- c("var", "Overall") 
-		allSelectedFeatures <- dplyr::arrange(allSelectedFeatures, -Overall)
+		allSelectedFeatures <- dplyr::arrange(allSelectedFeatures, -.data$Overall)
 		allSelectedFeatures$best <- allSelectedFeatures$var %in% bestFeatureSet
 		allSelectedFeatures$best <- ifelse(allSelectedFeatures$best, "optimal RF feature set", "other sets")
 
@@ -309,6 +316,7 @@ makeAllFeatureImportancePlotFS <- function(BMR_perf, selectedPATH, bestFeatureSe
 #' @param first `numeric`, number of feature to display
 #' @param best `logical`, default to `FALSE`, to highlight which features are selected in an optimal (best) set
 #' @return a `ggplot` object
+#' @importFrom rlang .data
 #' @keywords ml-postprocess
 #' @export
 makeFeatureImportancePlot <- function(FeatureImportance, first = 20, best = FALSE){
@@ -316,19 +324,19 @@ makeFeatureImportancePlot <- function(FeatureImportance, first = 20, best = FALS
 	FeatureImportance$type <- factor(FeatureImportance$type, 
 		levels = c("TAM", "GIS", "Statistical roughness", "Topology", "Contextual"),
 		labels = c("TAM", "GIS", "Statistical roughness", "Topology", "Contextual"))
-	FeatureImportance <- head(FeatureImportance, first)
+	FeatureImportance <- utils::head(FeatureImportance, first)
 	if (best){
-		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = type)) +
-		        ggplot2::geom_point(ggplot2::aes(x=Overall, y=forcats::fct_reorder(var,Overall))) +
-				ggplot2::geom_segment(ggplot2::aes(linetype = best, x = 0, xend = Overall, y = forcats::fct_reorder(var,Overall), yend = forcats::fct_reorder(var,Overall))) +
+		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = .data$type)) +
+		        ggplot2::geom_point(ggplot2::aes(x=.data$Overall, y=forcats::fct_reorder(.data$var,.data$Overall))) +
+				ggplot2::geom_segment(ggplot2::aes(linetype = .data$best, x = 0, xend = .data$Overall, y = forcats::fct_reorder(.data$var,.data$Overall), yend = forcats::fct_reorder(.data$var,.data$Overall))) +
 		        ggplot2::labs(title = "RF model importance (top 20 variables)", y = "variable", x = "variable importance") + 
 				ggplot2::theme_minimal() +
 		        ggplot2::scale_color_discrete(drop = FALSE)
 		p	
 	} else {
-		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = type)) +
-		        ggplot2::geom_point(ggplot2::aes(x=Overall, y=forcats::fct_reorder(var,Overall))) +
-				ggplot2::geom_segment(ggplot2::aes(x = 0, xend = Overall, y = forcats::fct_reorder(var,Overall), yend = forcats::fct_reorder(var,Overall))) +
+		p <-    ggplot2::ggplot(FeatureImportance, ggplot2::aes(color = .data$type)) +
+		        ggplot2::geom_point(ggplot2::aes(x=.data$Overall, y=forcats::fct_reorder(.data$var,.data$Overall))) +
+				ggplot2::geom_segment(ggplot2::aes(x = 0, xend = .data$Overall, y = forcats::fct_reorder(.data$var,.data$Overall), yend = forcats::fct_reorder(.data$var,.data$Overall))) +
 		        ggplot2::labs(title = "RF model importance (top 20 variables)", y = "variable", x = "variable importance") + 
 				ggplot2::theme_minimal() +
 		        ggplot2::scale_color_discrete(drop = FALSE)
@@ -389,15 +397,16 @@ fixVarNames <- function(df, var = "var"){
 #' @param bestFeatureSets the optimal selected features for each regions
 #' @return a `data.frame`
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 getFreqBestFeatureSets <- function(bestFeatureSets){
-	bestFeatureSets <- bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min))
-	freq_bestFeatureSets <- dplyr::group_by(bestFeatureSets, task.id) %>% 
-		dplyr::filter(learner.id == "randomForest") %>%
-		dplyr::filter(min == min(min)) %>% dplyr::ungroup()
+	bestFeatureSets <- bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", .data$task.id), min = as.numeric(.data$min))
+	freq_bestFeatureSets <- dplyr::group_by(bestFeatureSets, .data$task.id) %>% 
+		dplyr::filter(.data$learner.id == "randomForest") %>%
+		dplyr::filter(.data$min == min(.data$min)) %>% dplyr::ungroup()
 	freq_bestFeatureSets <- freq_bestFeatureSets[!duplicated(freq_bestFeatureSets$task.id), ]
-	freq_bestFeatureSets <- rstatix::freq_table(unlist(lapply(freq_bestFeatureSets$features, function(fl) strsplit(fl, " ")))) %>% dplyr::mutate(prop = n / nrow(freq_bestFeatureSets))
+	freq_bestFeatureSets <- rstatix::freq_table(unlist(lapply(freq_bestFeatureSets$features, function(fl) strsplit(fl, " ")))) %>% dplyr::mutate(prop = .data$n / nrow(freq_bestFeatureSets))
 	return(freq_bestFeatureSets)	
 }
 
@@ -406,15 +415,16 @@ getFreqBestFeatureSets <- function(bestFeatureSets){
 #' @param bestFeatureSets the optimal selected features for each regions
 #' @return a `data.frame` subsetted to correspond to the `bestFeatureSets`
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 getBestBMRTune <- function(BMR_tune, bestFeatureSets){
 	bestBMR_tune <- dplyr::left_join(
-		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min)),
+		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", .data$task.id), min = as.numeric(.data$min)),
 		BMR_tune, 
 		by = c("task.id" = "task.id", "learner.id" = "learner.id", "min" = "FS_NUM")
 		) %>%
-	dplyr::rename(FS_NUM = min) 
+	dplyr::rename(FS_NUM = .data$min) 
 	return(bestBMR_tune)
 }
 
@@ -425,10 +435,11 @@ getBestBMRTune <- function(BMR_tune, bestFeatureSets){
 #' @param bestBMR_tune a `data.frame` containing the results of the optimal models
 #' @return a `ggplot` object
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 makeBestTuneAUCPlot <- function(bestBMR_tune){
-	stat_test <- bestBMR_tune %>% dplyr::group_by(task.id) %>% rstatix::t_test(multiclass.au1u ~ learner.id, var.equal = FALSE)
+	stat_test <- bestBMR_tune %>% dplyr::group_by(.data$task.id) %>% rstatix::t_test(multiclass.au1u ~ learner.id, var.equal = FALSE)
 	p_bestTuneAUC <- ggpubr::ggviolin(bestBMR_tune, 
 		x = "learner.id", 
 		y = "multiclass.au1u", 
@@ -481,10 +492,11 @@ normH <- function(var){
 #' @param maxH_nnTrain `numeric` the maximum value for entropy for the `nnTrain` learner
 #' @return a `data.frame`
 #' @keywords ml-postprocess
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
 getBMRTuningEntropy <- function(BMR_tune, TUNELENGTH, maxH_nnTrain = sum(sapply(c(5, 7,5,3,5,3,3), log2))){
-	BMR_lrnH <- BMR_tune %>% dplyr::group_by(task.id, FS_NUM, learner.id) %>% 
+	BMR_lrnH <- BMR_tune %>% dplyr::group_by(.data$task.id, .data$FS_NUM, .data$learner.id) %>% 
 		dplyr::group_modify(~ 
 			dplyr::summarize_at(.x, getHyperparNames(unique(.y$learner.id)), normH) %>%
 			dplyr::transmute(total_tuning_entropy = rowSums(.))
@@ -504,37 +516,38 @@ getBMRTuningEntropy <- function(BMR_tune, TUNELENGTH, maxH_nnTrain = sum(sapply(
 #' @param bestFeatureSets the optimal selected features for each regions
 #' @param bestBMR_tune a `data.frame` containing the results of the tuning for optimal models
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @keywords ml-postprocess
 #' @export
 getBestBMRTuningEntropy <- function(BMR_lrnH, bestFeatureSets, bestBMR_tune){
 	bestBMR_lrnH <- dplyr::left_join(
-		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", task.id), min = as.numeric(min)), 
+		bestFeatureSets %>% dplyr::mutate(task.id = gsub("ALLSAC", "SAC", .data$task.id), min = as.numeric(.data$min)), 
 		BMR_lrnH, 
 		by = c("task.id" = "task.id", "learner.id" = "learner.id", "min" = "FS_NUM")
 		) %>%
-		dplyr::rename(FS_NUM = min, tuning_entropy = value) %>%
+		dplyr::rename(FS_NUM = .data$min, tuning_entropy = .data$value) %>%
 		dplyr::select(- "variable")
 	bestBMR_lrnH <- dplyr::left_join(
 		bestBMR_lrnH, 
 		bestBMR_tune %>%
 		reshape2::melt(measure.vars = c("cost", "mtry", "max.number.of.layers")) %>%
-		dplyr::group_by(task.id, learner.id, variable, FS_NUM) %>%
+		dplyr::group_by(.data$task.id, .data$learner.id, .data$variable, .data$FS_NUM) %>%
 		dplyr::summarize(
-			min_hyperpar = min(value), 
-			max_hyperpar = max(value),
-			len_hyperpar = length(unique(value)),
-			mfv_hyperpar = min(modeest::mfv(value))) %>%
+			min_hyperpar = min(.data$value), 
+			max_hyperpar = max(.data$value),
+			len_hyperpar = length(unique(.data$value)),
+			mfv_hyperpar = min(modeest::mfv(.data$value))) %>%
 		na.omit(),
 		by = c("task.id", "learner.id", "FS_NUM")
 		)
 	bestBMR_lrnH <- dplyr::left_join(
 		bestBMR_lrnH, 
 		bestBMR_tune %>%
-		dplyr::group_by(task.id, learner.id, FS_NUM) %>%
+		dplyr::group_by(.data$task.id, .data$learner.id, .data$FS_NUM) %>%
 		dplyr::summarize(
-			mean_auc = mean(multiclass.au1u),
-			mean_timetrain = mean(timetrain),
-			mean_acc = mean(acc)) %>%
+			mean_auc = mean(.data$multiclass.au1u),
+			mean_timetrain = mean(.data$timetrain),
+			mean_acc = mean(.data$acc)) %>%
 		na.omit(),
 		by = c("task.id", "learner.id", "FS_NUM")
 	)
@@ -545,14 +558,15 @@ getBestBMRTuningEntropy <- function(BMR_lrnH, bestFeatureSets, bestBMR_tune){
 #' @param BMR_lrnH a `data.frame` generated with `getBMRTuningEntropy()`
 #' @param bestBMR_lrnH a `data.frame` with the tuning entropy corresponding to the optimal models
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @keywords ml-postprocess
 #' @export
 makeTuningEntropyPlot <- function(BMR_lrnH, bestBMR_lrnH){
 	p_Hnorms <- lapply(unique(BMR_lrnH$task.id), function(task){
-		p_Hnorm <- ggplot2::ggplot(BMR_lrnH %>% dplyr::filter(task.id == task), ggplot2::aes(x = FS_NUM, y = value, group = learner.id, color = learner.id)) + 
+		p_Hnorm <- ggplot2::ggplot(BMR_lrnH %>% dplyr::filter(.data$task.id == task), ggplot2::aes(x = .data$FS_NUM, y = .data$value, group = .data$learner.id, color = .data$learner.id)) + 
 			ggplot2::geom_line() +
 			ggplot2::stat_smooth(fill=NA, alpha=1, lwd = 1.5) +
-			ggplot2::geom_point(data = bestBMR_lrnH %>% dplyr::filter(task.id == task), ggplot2::aes(x = FS_NUM, y = tuning_entropy), size = 4) +
+			ggplot2::geom_point(data = bestBMR_lrnH %>% dplyr::filter(.data$task.id == task), ggplot2::aes(x = .data$FS_NUM, y = .data$tuning_entropy), size = 4) +
 			ggplot2::facet_grid(~ task.id) +
 			ggplot2::labs(x = "Number of Predictors", 
 				y = "Normalized Tuning Entropy") +
@@ -568,12 +582,13 @@ makeTuningEntropyPlot <- function(BMR_lrnH, bestBMR_lrnH){
 #' @param BMR a `data.frame` with tuning results
 #' @param lrn `character` a `mlr` `learner.id`
 #' @return a `ggplot` object
+#' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @keywords ml-postprocess
 #' @export
 getTunePlot <- function(BMR, lrn){
-	tuneResults <- BMR %>% dplyr::filter(learner.id == lrn) %>% dplyr::select(dplyr::all_of(c("task.id", getHyperparNames(lrn))))
-	TunePlot <- ggplot2::ggplot(reshape2::melt(tuneResults, id.vars = "task.id") %>% dplyr::mutate(value = as.factor(value)), ggplot2::aes(x = value, fill = task.id, color = task.id)) +
+	tuneResults <- BMR %>% dplyr::filter(.data$learner.id == lrn) %>% dplyr::select(dplyr::all_of(c("task.id", getHyperparNames(lrn))))
+	TunePlot <- ggplot2::ggplot(reshape2::melt(tuneResults, id.vars = "task.id") %>% dplyr::mutate(value = as.factor(.data$value)), ggplot2::aes(x = .data$value, fill = .data$task.id, color = .data$task.id)) +
 		ggplot2::geom_bar(position=ggplot2::position_dodge2()) +
 		ggpubr::theme_pubr() +
 		ggplot2::labs(x = "") +
