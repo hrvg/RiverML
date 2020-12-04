@@ -4,7 +4,7 @@
 \alias{get_predictions}
 \title{Get predictions}
 \usage{
-get_predictions(REGIONS, LRN_IDS, mod.dir, TARGET = TRUE, REDUCED, TUNE_FS)
+get_predictions(REGIONS, LRN_IDS, mod.dir, TARGET = TRUE, TUNE_FS)
 }
 \arguments{
 \item{REGIONS}{\code{character}, the \code{task.id} identifiers and the list of area of study}

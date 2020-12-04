@@ -10,9 +10,9 @@
 #' @return a named list of predictions
 #' @keywords ml-predictions
 #' @export
-get_predictions <- function(REGIONS, LRN_IDS, mod.dir, TARGET = TRUE, REDUCED, TUNE_FS){
+get_predictions <- function(REGIONS, LRN_IDS, mod.dir, TARGET = TRUE, TUNE_FS){
 	mods <- get_final_models(mod.dir, REGIONS, TUNE_FS)
-	preds <- compute_predictions(REGIONS, mods, TARGET, TUNE_FS)
+	preds <- compute_predictions(REGIONS, LRN_IDS, mods, TARGET, TUNE_FS)
 	return(preds)
 }
 
@@ -22,9 +22,11 @@ get_predictions <- function(REGIONS, LRN_IDS, mod.dir, TARGET = TRUE, REDUCED, T
 #' @param TUNE_FS `logical`, toggle the behaviour for the feature selection
 #' @return a named list of models
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @keywords ml-predictions
 #' @export
 get_final_models <- function(mod.dir, REGIONS, TUNE_FS){
+	# utils::globalVariables(c("PATH", "bestFeatureSets"))
 	if (!TUNE_FS){
 		mods <- lapply(REGIONS, function(reg) readRDS(file.path(mod.dir, paste0(reg, "_final.Rds"))))
 	} else {
@@ -39,9 +41,9 @@ get_final_models <- function(mod.dir, REGIONS, TUNE_FS){
 		mods <- list()
 		for (i in seq_along(REGIONS)){
 			reg <- REGIONS[i]
-			lrn_ids <- (bestFeatureSets %>% dplyr::filter(task.id == reg))$learner.id
+			lrn_ids <- (bestFeatureSets %>% dplyr::filter(.data$task.id == reg))$learner.id
 			mods[[i]] <- lapply(lrn_ids, function(lrn){
-				dir <- dirList[FS_NUM_LIST == (bestFeatureSets %>% dplyr::filter(task.id == reg, learner.id == lrn))$min] 
+				dir <- dirList[FS_NUM_LIST == (bestFeatureSets %>% dplyr::filter(.data$task.id == reg, .data$learner.id == lrn))$min] 
 				mod <- readRDS(file.path(dir, paste0(reg, "_final.Rds")))
 				mod$mods[names(mod$mods) != lrn] <- NULL
 				return(mod)
@@ -55,6 +57,7 @@ get_final_models <- function(mod.dir, REGIONS, TUNE_FS){
 
 #' Retrieve the final (optimal) models
 #' @param REGIONS `character`, the `task.id` identifiers and the list of area of study
+#' @param LRN_IDS `character`, the `learner.id` identifiers and the list of learners
 #' @param mods a named list of models returned by `get_final_models()`
 #' @param TARGET `logical`, default to `TRUE`, toggle the target or training datasets
 #' @param TUNE_FS `logical`, toggle the behaviour for the feature selection
@@ -63,7 +66,7 @@ get_final_models <- function(mod.dir, REGIONS, TUNE_FS){
 #' @import progress
 #' @keywords ml-predictions
 #' @export
-compute_predictions <- function(REGIONS, mods, TARGET, TUNE_FS){
+compute_predictions <- function(REGIONS, LRN_IDS, mods, TARGET, TUNE_FS){
 	pb <- progress_bar$new(format = "[:bar] :current/:total - :percent in :elapsed/:eta \n", total = length(REGIONS), show_after = 0)
 	invisible(pb$tick(0))
 	preds <- list()
@@ -82,7 +85,7 @@ compute_predictions <- function(REGIONS, mods, TARGET, TUNE_FS){
 			}
 
 			l.pred <- lapply(LRN_IDS, function(lrn){
-				predict(mods[[region]]$mods[[lrn]], newdata = target_data)
+				stats::predict(mods[[region]]$mods[[lrn]], newdata = target_data)
 			})
 			names(l.pred) <- LRN_IDS
 			preds[[i]] <- list(pred = l.pred, labels = labels)
@@ -102,7 +105,7 @@ compute_predictions <- function(REGIONS, mods, TARGET, TUNE_FS){
 					target_data <- preproc_data(raw_target_data, mods[[region]][[lrn]]$ppc, labels)
 					target_data <- target_data$data
 				}
-				predict(mods[[region]][[lrn]]$mods[[lrn]], newdata = target_data)
+				stats::predict(mods[[region]][[lrn]]$mods[[lrn]], newdata = target_data)
 			})
 			names(l.pred) <- LRN_IDS
 			if(!TARGET){
@@ -146,9 +149,9 @@ get_calibrations <- function(REGIONS, LRN_IDS, preds, plot = FALSE){
 			}
 			predictions <- predictions[, order(colnames(predictions))]
 			colnames(predictions) <- gsub("prob.", "", colnames(predictions))
-			sigmoidalCal <- cv.glmnet(model.matrix(~., data =  predictions), labels,  family = "multinomial")
+			sigmoidalCal <- cv.glmnet(stats::model.matrix(~., data =  predictions), labels,  family = "multinomial")
 			if (plot){
-				calibrated_predictions <- predict(sigmoidalCal, newx = model.matrix(~., data =  predictions), type = "response")
+				calibrated_predictions <- stats::predict(sigmoidalCal, newx = stats::model.matrix(~., data =  predictions), type = "response")
 				dim(calibrated_predictions) <- dim(predictions)
 				colnames(calibrated_predictions) <- colnames(predictions)
 				lvls <- colnames(calibrated_predictions)
@@ -156,7 +159,7 @@ get_calibrations <- function(REGIONS, LRN_IDS, preds, plot = FALSE){
 					lvls[which.max(row)]
 				})
 
-				par(mfrow = c(3, 1))
+				graphics::par(mfrow = c(3, 1))
 				if (hydro_class == "ALLSAC") hydro_class <- "SAC"
 				uncalibrated_prob <- predictions[, order(as.numeric(gsub(hydro_class, "", colnames(calibrated_predictions))))]
 				uncalibrated_prob <- uncalibrated_prob[order(as.numeric(gsub(hydro_class, "", class.predictions))), ]
@@ -181,19 +184,20 @@ get_calibrations <- function(REGIONS, LRN_IDS, preds, plot = FALSE){
 #' @param REGIONS `character`, the `task.id` identifiers and the list of area of study
 #' @param LRN_IDS `character`, the `learner.id` identifiers and the list of learners
 #' @param preds `list`, output from `get_predictions()`
-#' @param preds `list`, output from `get_calibrations()`
+#' @param calibrations `list`, output from `get_calibrations()`
 #' @return a list of calibrated predictions
 #' @import glmnet
+#' @importFrom magrittr %>%
 #' @keywords ml-predictions
 #' @export
 calibrated_predictions <- function(REGIONS, LRN_IDS, preds, calibrations){
 	calibrated_predictions <- lapply(REGIONS, function(hydro_class){
 		cal_preds <- lapply(LRN_IDS, function(lrn){
-			predictions <- preds[[hydro_class]]$pred[[lrn]]$data %>% select(- "response")
+			predictions <- preds[[hydro_class]]$pred[[lrn]]$data %>% dplyr::select(- "response")
 			predictions <- predictions[, order(colnames(predictions))]
 			colnames(predictions) <- gsub("prob.", "", colnames(predictions))
 			sigmoidalCal <- calibrations[[hydro_class]][[lrn]]
-			calibrated_predictions <- predict(sigmoidalCal, newx = model.matrix(~., data =  predictions), type = "response")
+			calibrated_predictions <- stats::predict(sigmoidalCal, newx = stats::model.matrix(~., data =  predictions), type = "response")
 			dim(calibrated_predictions) <- dim(predictions)
 			colnames(calibrated_predictions) <- colnames(predictions)
 			return(calibrated_predictions)
@@ -262,8 +266,8 @@ simpson_evenness <- function(l, .prob_bool = FALSE){
 #' @keywords ml-predictions
 get_entropy_df <- function(entropy_rate){
 	entropy_rate_df <- reshape2::melt(t(as.data.frame(entropy_rate))) %>% 
-		dplyr::rename(region = Var1, learner.id = Var2, entropy_rate = value) %>%
-		dplyr::mutate(region = gsub("ALLSAC", "SAC", region)) %>%
-		dplyr::arrange(region)
+		dplyr::rename(region = .data$Var1, learner.id = .data$Var2, entropy_rate = .data$value) %>%
+		dplyr::mutate(region = gsub("ALLSAC", "SAC", .data$region)) %>%
+		dplyr::arrange(.data$region)
 	return(entropy_rate_df)
 }

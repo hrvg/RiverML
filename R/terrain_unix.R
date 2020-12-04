@@ -13,6 +13,7 @@
 #' @param unit radians or tangent
 #' @param neighbors default to queen case
 #' @param filename passed to WriteRaster
+#' @param ... similar to `raster::terrain()` `...`
 #' @return a raster with the computed metrics
 #' @importFrom raster blockSize brick canProcessInMemory couldBeLonLat getValues hasValues isLonLat nlayers pbClose pbCreate pbStep pointDistance projection raster res setValues trim values writeRaster writeStart writeStop writeValues yFromRow
 #' @useDynLib RiverML _do_terrain_

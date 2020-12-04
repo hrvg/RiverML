@@ -235,6 +235,7 @@ compute_final_model <- function(learners, tasks, prob, mes, LRN_IDS){
 #' @export
 #' @return a list of `mlr` benchmark results
 regional_benchmark <- function(regions = c("ALLSAC", "SFE", "K", "NC", "NCC", "SCC", "SC", "SJT"), LRN_IDS, TUNELENGTH, INNER, ITERS, PROB, NU, REPS, PREPROC, FINAL, PATH, REDUCED, MES, INFO, FS, FS_NUM){
+	# utils::globalVariables(c("bestBMR_tune", "bestBMR_lrnH"))
 	bmrs <- lapply(regions, function(region){
 		### SKIP ###
 		if (FINAL){

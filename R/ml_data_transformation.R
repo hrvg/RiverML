@@ -19,7 +19,7 @@ get_ppc <- function(sanitized_data, seed_preproc, PREPROC){
 #' @export
 #' @keywords ml-data-transformation
 preproc_data <- function(raw_training_data, ppc, labels){
-	training_data <- caret::predict(ppc, raw_training_data)
+	training_data <- stats::predict(ppc, raw_training_data)
 	return(list(data = training_data, labels = labels))
 }
 

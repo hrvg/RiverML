@@ -11,7 +11,9 @@ calibrated_predictions(REGIONS, LRN_IDS, preds, calibrations)
 
 \item{LRN_IDS}{\code{character}, the \code{learner.id} identifiers and the list of learners}
 
-\item{preds}{\code{list}, output from \code{get_calibrations()}}
+\item{preds}{\code{list}, output from \code{get_predictions()}}
+
+\item{calibrations}{\code{list}, output from \code{get_calibrations()}}
 }
 \value{
 a list of calibrated predictions

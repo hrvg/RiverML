@@ -16,6 +16,8 @@ terrain_(x, opt = "slope", unit = "radians", neighbors = 8, filename = "", ...)
 \item{neighbors}{default to queen case}
 
 \item{filename}{passed to WriteRaster}
+
+\item{...}{similar to \code{raster::terrain()} \code{...}}
 }
 \value{
 a raster with the computed metrics
