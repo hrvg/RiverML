@@ -65,4 +65,5 @@ Suggests:
 VignetteBuilder: knitr
 Remotes:
   bvegetabile/ccber,
-  luukvdmeer/sfnetworks
+  luukvdmeer/sfnetworks,
+  rspatial/terra
